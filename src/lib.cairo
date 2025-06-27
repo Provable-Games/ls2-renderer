@@ -48,6 +48,7 @@ pub mod ERC721Upgradeable {
         #[substorage(v0)]
         pub src5: SRC5Component::Storage,
         pub token_counter: u256,
+        pub mock_adventurer_addr: ContractAddress,
     }
 
     #[event]
@@ -69,8 +70,10 @@ pub mod ERC721Upgradeable {
         name: ByteArray,
         symbol: ByteArray,
         base_uri: ByteArray,
+        mock_adventurer_addr: ContractAddress,
     ) {
         self.erc721.initializer(name, symbol, base_uri);
+        self.mock_adventurer_addr.write(mock_adventurer_addr);
     }
 
     #[abi(embed_v0)]
@@ -84,6 +87,12 @@ pub mod ERC721Upgradeable {
             self.token_counter.write(new_token_id);
             self.erc721.mint(recipient, new_token_id);
         }
+    }
+
+    /// Set the mock adventurer contract address (admin only)
+    fn set_mock_adventurer_addr(ref self: ContractState, addr: ContractAddress) {
+        // TODO: add onlyOwner or admin check if needed
+        self.mock_adventurer_addr.write(addr);
     }
 
     #[abi(embed_v0)]
@@ -106,9 +115,8 @@ pub mod ERC721Upgradeable {
         /// - `token_id` exists.
         fn token_uri(self: @ContractState, token_id: u256) -> ByteArray {
             self.erc721._require_owned(token_id);
-
-            // Use the renderer to generate metadata
-            super::renderer::Renderer::render(token_id)
+            let mock_addr = self.mock_adventurer_addr.read();
+            super::renderer::Renderer::render(token_id, mock_addr)
         }
     }
 }

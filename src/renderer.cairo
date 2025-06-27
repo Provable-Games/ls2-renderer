@@ -1,168 +1,107 @@
-// Pure Cairo renderer library - no Starknet dependencies
+// SPDX-License-Identifier: MIT
+// NFT Renderer for ls2-renderer, replicating death-mountain's metadata logic
 use core::array::ArrayTrait;
+use ls2_renderer::mock_adventurer::{IMockAdventurerDispatcherTrait, Adventurer, Bag};
+use starknet::ContractAddress;
 
 // Trait for rendering token metadata
 pub trait Renderer {
-    fn render(token_id: u256) -> ByteArray;
+    fn render(token_id: u256, mock_adventurer_addr: ContractAddress) -> ByteArray;
 }
 
-// Implementation of the renderer
-pub impl RendererImpl of Renderer {
-    fn render(token_id: u256) -> ByteArray {
-        // Create a simple JSON-like structure for the token metadata
-        let mut result: ByteArray = Default::default();
-        
-        // Start JSON object
-        result.append_byte('{');
-        result.append_byte('"');
-        
-        // Add name field
-        append_string(ref result, "name");
-        result.append_byte('"');
-        result.append_byte(':');
-        result.append_byte('"');
-        append_string(ref result, "Token #");
-        append_u256(ref result, token_id);
-        result.append_byte('"');
-        result.append_byte(',');
-        
-        // Add description field
-        result.append_byte('"');
-        append_string(ref result, "description");
-        result.append_byte('"');
-        result.append_byte(':');
-        result.append_byte('"');
-        append_string(ref result, "A unique NFT with ID ");
-        append_u256(ref result, token_id);
-        result.append_byte('"');
-        result.append_byte(',');
-        
-        // Add attributes
-        result.append_byte('"');
-        append_string(ref result, "attributes");
-        result.append_byte('"');
-        result.append_byte(':');
-        result.append_byte('[');
-        
-        // Add token ID attribute
-        result.append_byte('{');
-        result.append_byte('"');
-        append_string(ref result, "trait_type");
-        result.append_byte('"');
-        result.append_byte(':');
-        result.append_byte('"');
-        append_string(ref result, "Token ID");
-        result.append_byte('"');
-        result.append_byte(',');
-        result.append_byte('"');
-        append_string(ref result, "value");
-        result.append_byte('"');
-        result.append_byte(':');
-        result.append_byte('"');
-        append_u256(ref result, token_id);
-        result.append_byte('"');
-        result.append_byte('}');
-        
-        // Close attributes array
-        result.append_byte(']');
-        
-        // Close JSON object
-        result.append_byte('}');
-        
-        result
+// Helper: Convert u256 to u64 (for adventurer_id)
+fn u256_to_u64(val: u256) -> u64 {
+    // Only use the low 64 bits for mock id
+    val.low.try_into().unwrap()
+}
+
+// Helper: Deterministic name
+fn adventurer_name(adventurer_id: u64) -> ByteArray {
+    let mut name: ByteArray = "Adventurer #";
+    name += u64_to_string(adventurer_id);
+    name
+}
+
+// Helper: Convert u64 to ByteArray
+fn u64_to_string(mut n: u64) -> ByteArray {
+    let mut out: ByteArray = Default::default();
+    if n == 0 {
+        out.append_byte('0');
+        return out;
     }
-}
-
-// Helper function to append a string to ByteArray
-fn append_string(ref result: ByteArray, s: ByteArray) {
-    let len = s.len();
-    let mut i = 0;
-    loop {
-        if i >= len {
-            break;
-        }
-        result.append_byte(s[i]);
-        i += 1;
-    };
-}
-
-// Helper function to convert and append u256 to ByteArray
-fn append_u256(ref result: ByteArray, value: u256) {
-    // Convert u256 to string representation
-    // We'll handle both high and low parts
-    if value.high == 0 {
-        // If high part is 0, just convert the low part
-        append_u128(ref result, value.low);
-    } else {
-        // Need to handle full u256
-        // This is a simplified version - for production, you'd want proper decimal conversion
-        append_u128(ref result, value.high);
-        append_string(ref result, "_");
-        append_u128(ref result, value.low);
-    }
-}
-
-// Helper function to convert and append u128 to ByteArray
-fn append_u128(ref result: ByteArray, mut value: u128) {
-    if value == 0 {
-        result.append_byte('0');
-        return;
-    }
-    
-    // Convert number to string by extracting digits
     let mut digits: Array<u8> = ArrayTrait::new();
-    
     loop {
-        if value == 0 {
-            break;
-        }
-        let digit = value % 10;
-        digits.append(digit.try_into().unwrap() + '0');
-        value = value / 10;
+        if n == 0 { break; }
+        digits.append((n % 10).try_into().unwrap() + '0');
+        n = n / 10;
     };
-    
-    // Append digits in reverse order
     let mut i = digits.len();
     loop {
-        if i == 0 {
-            break;
-        }
+        if i == 0 { break; }
         i -= 1;
-        result.append_byte(*digits[i]);
+        out.append_byte(*digits[i]);
     };
+    out
 }
 
-// Additional rendering functions for more complex metadata
-pub fn render_with_image(token_id: u256, image_base_uri: ByteArray) -> ByteArray {
-    let mut result: ByteArray = Default::default();
-    
-    // Start JSON object
-    result.append_byte('{');
-    
-    // Add standard fields
-    result.append_byte('"');
-    append_string(ref result, "name");
-    result.append_byte('"');
-    result.append_byte(':');
-    result.append_byte('"');
-    append_string(ref result, "Token #");
-    append_u256(ref result, token_id);
-    result.append_byte('"');
-    result.append_byte(',');
-    
-    // Add image field
-    result.append_byte('"');
-    append_string(ref result, "image");
-    result.append_byte('"');
-    result.append_byte(':');
-    result.append_byte('"');
-    append_string(ref result, image_base_uri);
-    append_u256(ref result, token_id);
-    append_string(ref result, ".png");
-    result.append_byte('"');
-    
-    // Close JSON object
-    result.append_byte('}');
-    
-    result
+// Helper: Convert u16 to ByteArray
+fn u16_to_string(mut n: u16) -> ByteArray {
+    let mut out: ByteArray = Default::default();
+    if n == 0 {
+        out.append_byte('0');
+        return out;
+    }
+    let mut digits: Array<u8> = ArrayTrait::new();
+    loop {
+        if n == 0 { break; }
+        digits.append((n % 10).try_into().unwrap() + '0');
+        n = n / 10;
+    };
+    let mut i = digits.len();
+    loop {
+        if i == 0 { break; }
+        i -= 1;
+        out.append_byte(*digits[i]);
+    };
+    out
+}
+
+// Helper: Convert bool to ByteArray
+fn bool_to_string(b: bool) -> ByteArray {
+    if b { "true" } else { "false" }
+}
+
+// Helper: Simple SVG (placeholder, can be expanded)
+fn svg_image(name: ByteArray) -> ByteArray {
+    "<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='100%' height='100%' fill='black'/><text x='50%' y='50%' font-size='24' fill='#3DEC00' text-anchor='middle' dominant-baseline='middle'>" + name + "</text></svg>"
+}
+
+// Helper: JSON metadata (no base64 for simplicity)
+fn json_metadata(adventurer_id: u64, name: ByteArray, svg: ByteArray, adv: Adventurer, bag: Bag) -> ByteArray {
+    let image = svg; // In production, base64 encode and prefix as data:image/svg+xml;base64,
+    let mut json: ByteArray = "{";
+    json += "\"name\":\"" + name + "\",";
+    json += "\"description\":\"On-chain NFT Adventurer\",";
+    json += "\"image\":\"" + image + "\",";
+    json += "\"attributes\":[";
+    // Example attributes (expand as needed)
+    json += "{\"trait_type\":\"Health\",\"value\":\"" + u16_to_string(adv.health) + "\"},";
+    json += "{\"trait_type\":\"XP\",\"value\":\"" + u16_to_string(adv.xp) + "\"},";
+    json += "{\"trait_type\":\"Gold\",\"value\":\"" + u16_to_string(adv.gold) + "\"},";
+    json += "{\"trait_type\":\"Bag Mutated\",\"value\":\"" + bool_to_string(bag.mutated) + "\"}";
+    json += "]}";
+    // In production, base64 encode and prefix as data:application/json;base64,
+    json
+}
+
+pub impl RendererImpl of Renderer {
+    fn render(token_id: u256, mock_adventurer_addr: ContractAddress) -> ByteArray {
+        let adventurer_id = u256_to_u64(token_id);
+        let mut dispatcher = ls2_renderer::mock_adventurer::IMockAdventurerDispatcher { contract_address: mock_adventurer_addr };
+        let adv = dispatcher.get_adventurer(adventurer_id);
+        let bag = dispatcher.get_bag(adventurer_id);
+        let name = adventurer_name(adventurer_id);
+        let svg = svg_image(name.clone());
+        json_metadata(adventurer_id, name, svg, adv, bag)
+    }
 }

@@ -5,8 +5,9 @@ use ls2_renderer::{IOpenMintDispatcher, IOpenMintDispatcherTrait};
 use ls2_renderer::mock_adventurer::{Adventurer, Bag, Item, Equipment, Stats};
 use ls2_renderer::mock_adventurer::{IMockAdventurerDispatcher, IMockAdventurerDispatcherTrait};
 use core::array::ArrayTrait;
+use core::byte_array::ByteArrayTrait;
 
-fn deploy_contract() -> ContractAddress {
+fn deploy_contract(mock_adventurer_addr: ContractAddress) -> ContractAddress {
     let name: ByteArray = "Test NFT";
     let symbol: ByteArray = "TNFT";
     let base_uri: ByteArray = "https://example.com/";
@@ -16,14 +17,17 @@ fn deploy_contract() -> ContractAddress {
     name.serialize(ref calldata);
     symbol.serialize(ref calldata);
     base_uri.serialize(ref calldata);
-    
+    mock_adventurer_addr.serialize(ref calldata);
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     contract_address
 }
 
 #[test]
 fn test_deployment() {
-    let contract_address = deploy_contract();
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     
     assert(metadata_dispatcher.name() == "Test NFT", 'Wrong name');
@@ -32,7 +36,10 @@ fn test_deployment() {
 
 #[test]
 fn test_mint() {
-    let contract_address = deploy_contract();
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
@@ -54,7 +61,10 @@ fn test_mint() {
 
 #[test]
 fn test_token_uri_with_renderer() {
-    let contract_address = deploy_contract();
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
@@ -66,17 +76,34 @@ fn test_token_uri_with_renderer() {
     let uri = metadata_dispatcher.token_uri(1);
     
     // Verify the JSON structure returned by the renderer
-    assert(uri.len() > 0, 'URI should not be empty');
-    
-    // Since ByteArray doesn't have a contains method in Cairo, we'll just verify it's not empty
-    // and has reasonable length for a JSON metadata
-    assert(uri.len() > 50, 'URI too short for valid JSON');
+    assert(ByteArrayTrait::len(@uri) > 0, 'empty');
+    assert(ByteArrayTrait::len(@uri) > 50, 'short');
+}
+
+#[test]
+fn test_token_uri_different_ids() {
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
+    let mint_dispatcher = IOpenMintDispatcher { contract_address };
+    let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
+    let recipient = contract_address_const::<0x123>();
+    // Mint two tokens
+    mint_dispatcher.mint(recipient); // id 1
+    mint_dispatcher.mint(recipient); // id 2
+    let uri1 = metadata_dispatcher.token_uri(1);
+    let uri2 = metadata_dispatcher.token_uri(2);
+    assert(uri1 != uri2, 'not unique');
 }
 
 #[test]
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_token_uri_nonexistent_token() {
-    let contract_address = deploy_contract();
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     
     // Try to get URI for a token that doesn't exist
@@ -85,7 +112,10 @@ fn test_token_uri_nonexistent_token() {
 
 #[test]
 fn test_multiple_mints_different_recipients() {
-    let contract_address = deploy_contract();
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
     
@@ -112,7 +142,10 @@ fn test_multiple_mints_different_recipients() {
 
 #[test]
 fn test_transfer_functionality() {
-    let contract_address = deploy_contract();
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
     
@@ -135,10 +168,11 @@ fn test_transfer_functionality() {
 #[test]
 fn test_mock_adventurer_deterministic() {
     // Deploy the mock_adventurer contract
-    let contract = declare("mock_adventurer").unwrap().contract_class();
-    let calldata = ArrayTrait::<felt252>::new();
-    let (contract_address, _) = contract.deploy(@calldata).unwrap();
-    let dispatcher = IMockAdventurerDispatcher { contract_address };
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = array![];
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
+    let dispatcher = IMockAdventurerDispatcher { contract_address: mock_addr };
 
     // Test with a specific adventurer_id
     let adventurer_id: u64 = 42;
