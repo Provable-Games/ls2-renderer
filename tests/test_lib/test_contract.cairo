@@ -2,6 +2,9 @@ use starknet::{ContractAddress, contract_address_const};
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address};
 use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait, IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait};
 use ls2_renderer::{IOpenMintDispatcher, IOpenMintDispatcherTrait};
+use ls2_renderer::mock_adventurer::{Adventurer, Bag, Item, Equipment, Stats};
+use ls2_renderer::mock_adventurer::{IMockAdventurerDispatcher, IMockAdventurerDispatcherTrait};
+use core::array::ArrayTrait;
 
 fn deploy_contract() -> ContractAddress {
     let name: ByteArray = "Test NFT";
@@ -127,4 +130,68 @@ fn test_transfer_functionality() {
     assert(erc721_dispatcher.owner_of(1) == recipient, 'Transfer failed');
     assert(erc721_dispatcher.balance_of(owner) == 0, 'Wrong owner balance');
     assert(erc721_dispatcher.balance_of(recipient) == 1, 'Wrong recipient balance');
+}
+
+#[test]
+fn test_mock_adventurer_deterministic() {
+    // Deploy the mock_adventurer contract
+    let contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
+    let dispatcher = IMockAdventurerDispatcher { contract_address };
+
+    // Test with a specific adventurer_id
+    let adventurer_id: u64 = 42;
+    let adv = dispatcher.get_adventurer(adventurer_id);
+    let expected_adv = Adventurer {
+        health: 100_u16 + (adventurer_id % 50_u64).try_into().unwrap(),
+        xp: ((adventurer_id * 7_u64) % 5000_u64).try_into().unwrap(),
+        gold: ((adventurer_id * 13_u64) % 200_u64).try_into().unwrap(),
+        beast_health: 20_u16 + (adventurer_id % 30_u64).try_into().unwrap(),
+        stat_upgrades_available: (adventurer_id % 5_u64).try_into().unwrap(),
+        stats: Stats {
+            strength: ((adventurer_id / 1) % 10_u64).try_into().unwrap() + 1_u8,
+            dexterity: ((adventurer_id / 2) % 10_u64).try_into().unwrap() + 1_u8,
+            vitality: ((adventurer_id / 4) % 10_u64).try_into().unwrap() + 1_u8,
+            intelligence: ((adventurer_id / 8) % 10_u64).try_into().unwrap() + 1_u8,
+            wisdom: ((adventurer_id / 16) % 10_u64).try_into().unwrap() + 1_u8,
+            charisma: ((adventurer_id / 32) % 10_u64).try_into().unwrap() + 1_u8,
+            luck: ((adventurer_id / 64) % 10_u64).try_into().unwrap() + 1_u8,
+        },
+        equipment: Equipment {
+            weapon: Item { id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap() },
+            chest: Item { id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap() },
+            head: Item { id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap() },
+            waist: Item { id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap() },
+            foot: Item { id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap() },
+            hand: Item { id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap() },
+            neck: Item { id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap() },
+            ring: Item { id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap() },
+        },
+        item_specials_seed: ((adventurer_id * 3_u64) % 65536_u64).try_into().unwrap(),
+        action_count: ((adventurer_id * 11_u64) % 100_u64).try_into().unwrap(),
+    };
+    assert_eq!(adv, expected_adv);
+
+    // Test get_bag
+    let bag = dispatcher.get_bag(adventurer_id);
+    let expected_bag = Bag {
+        item_1: Item { id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap() },
+        item_2: Item { id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap() },
+        item_3: Item { id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap() },
+        item_4: Item { id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap() },
+        item_5: Item { id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap() },
+        item_6: Item { id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap() },
+        item_7: Item { id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap() },
+        item_8: Item { id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap() },
+        item_9: Item { id: ((adventurer_id + 9) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 10) % 100_u64).try_into().unwrap() },
+        item_10: Item { id: ((adventurer_id + 10) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 11) % 100_u64).try_into().unwrap() },
+        item_11: Item { id: ((adventurer_id + 11) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 12) % 100_u64).try_into().unwrap() },
+        item_12: Item { id: ((adventurer_id + 12) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 13) % 100_u64).try_into().unwrap() },
+        item_13: Item { id: ((adventurer_id + 13) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 14) % 100_u64).try_into().unwrap() },
+        item_14: Item { id: ((adventurer_id + 14) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 15) % 100_u64).try_into().unwrap() },
+        item_15: Item { id: ((adventurer_id + 15) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 16) % 100_u64).try_into().unwrap() },
+        mutated: (adventurer_id % 2_u64) == 1_u64,
+    };
+    assert_eq!(bag, expected_bag);
 }

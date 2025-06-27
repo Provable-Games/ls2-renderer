@@ -2,6 +2,7 @@
 // OpenZeppelin Contracts for Cairo v2.0.0 (presets/src/erc721.cairo)
 
 pub mod renderer;
+pub mod mock_adventurer;
 
 /// # ERC721 Preset
 ///
