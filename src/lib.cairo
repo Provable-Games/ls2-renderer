@@ -29,7 +29,6 @@ pub mod ERC721Upgradeable {
     use starknet::{ContractAddress};
     use super::IOpenMint;
 
-    // import starknet storage
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     component!(path: ERC721Component, storage: erc721, event: ERC721Event);
@@ -48,7 +47,7 @@ pub mod ERC721Upgradeable {
         #[substorage(v0)]
         pub src5: SRC5Component::Storage,
         pub token_counter: u256,
-        pub mock_adventurer_addr: ContractAddress,
+        pub mock_adventurer_address: ContractAddress,
     }
 
     #[event]
@@ -70,10 +69,10 @@ pub mod ERC721Upgradeable {
         name: ByteArray,
         symbol: ByteArray,
         base_uri: ByteArray,
-        mock_adventurer_addr: ContractAddress,
+        mock_adventurer_address: ContractAddress,
     ) {
         self.erc721.initializer(name, symbol, base_uri);
-        self.mock_adventurer_addr.write(mock_adventurer_addr);
+        self.mock_adventurer_address.write(mock_adventurer_address);
     }
 
     #[abi(embed_v0)]
@@ -90,9 +89,11 @@ pub mod ERC721Upgradeable {
     }
 
     /// Set the mock adventurer contract address (admin only)
-    fn set_mock_adventurer_addr(ref self: ContractState, addr: ContractAddress) {
+    /// For testing purposes only
+    #[external(v0)]
+    fn set_mock_adventurer_address(ref self: ContractState, addr: ContractAddress) {
         // TODO: add onlyOwner or admin check if needed
-        self.mock_adventurer_addr.write(addr);
+        self.mock_adventurer_address.write(addr);
     }
 
     #[abi(embed_v0)]
@@ -115,7 +116,7 @@ pub mod ERC721Upgradeable {
         /// - `token_id` exists.
         fn token_uri(self: @ContractState, token_id: u256) -> ByteArray {
             self.erc721._require_owned(token_id);
-            let mock_addr = self.mock_adventurer_addr.read();
+            let mock_addr = self.mock_adventurer_address.read();
             super::renderer::Renderer::render(token_id, mock_addr)
         }
     }
