@@ -150,18 +150,131 @@ fn stats_to_string(stats: Stats) -> ByteArray {
     s
 }
 
-// Helper: SVG with stats grid
+// Helper: SVG with detailed adventurer card layout inspired by Frame 4192.svg
 fn svg_image_full(name: ByteArray, adv: Adventurer) -> ByteArray {
-    let mut svg: ByteArray = "<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='100%' height='100%' fill='black'/>";
-    svg += "<text x='50%' y='40' font-size='24' fill='#3DEC00' text-anchor='middle'>" + name + "</text>";
-    svg += "<text x='50%' y='70' font-size='16' fill='#3DEC00' text-anchor='middle'>Health: " + u16_to_string(adv.health) + "</text>";
-    svg += "<text x='50%' y='90' font-size='16' fill='#3DEC00' text-anchor='middle'>XP: " + u16_to_string(adv.xp) + "</text>";
-    svg += "<text x='50%' y='110' font-size='16' fill='#3DEC00' text-anchor='middle'>Gold: " + u16_to_string(adv.gold) + "</text>";
-    svg += "<text x='50%' y='130' font-size='16' fill='#3DEC00' text-anchor='middle'>Beast HP: " + u16_to_string(adv.beast_health) + "</text>";
-    svg += "<text x='50%' y='150' font-size='16' fill='#3DEC00' text-anchor='middle'>Stat Upgrades: " + u8_to_string(adv.stat_upgrades_available) + "</text>";
-    svg += "<text x='50%' y='170' font-size='16' fill='#3DEC00' text-anchor='middle'>Action Count: " + u16_to_string(adv.action_count) + "</text>";
-    svg += "<text x='50%' y='190' font-size='16' fill='#3DEC00' text-anchor='middle'>Item Specials Seed: " + u16_to_string(adv.item_specials_seed) + "</text>";
-    svg += "<text x='50%' y='220' font-size='14' fill='#3DEC00' text-anchor='middle'>Stats: STR " + u8_to_string(adv.stats.strength) + ", DEX " + u8_to_string(adv.stats.dexterity) + ", VIT " + u8_to_string(adv.stats.vitality) + ", INT " + u8_to_string(adv.stats.intelligence) + ", WIS " + u8_to_string(adv.stats.wisdom) + ", CHA " + u8_to_string(adv.stats.charisma) + ", LUCK " + u8_to_string(adv.stats.luck) + "</text>";
+    let mut svg: ByteArray = "<svg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600'>";
+    
+    // Background with subtle gradient
+    svg += "<defs>";
+    svg += "<filter id='shadow' x='-20%' y='-20%' width='140%' height='140%'>";
+    svg += "<feDropShadow dx='2' dy='4' stdDeviation='3' flood-opacity='0.3'/>";
+    svg += "</filter>";
+    svg += "</defs>";
+    
+    // Main card background
+    svg += "<rect width='100%' height='100%' fill='#000000'/>";
+    svg += "<rect x='20' y='20' width='360' height='560' rx='10' fill='#171D10' filter='url(#shadow)'/>";
+    svg += "<rect x='25' y='25' width='350' height='550' rx='8' fill='#000000' stroke='#2B5418' stroke-width='2'/>";
+    
+    // Header section with name
+    svg += "<rect x='40' y='40' width='320' height='50' rx='5' fill='#2B5418'/>";
+    svg += "<text x='200' y='70' font-family='monospace' font-size='20' font-weight='bold' fill='#78E846' text-anchor='middle'>" + name + "</text>";
+    
+    // Stats section (top)
+    svg += "<rect x='40' y='100' width='320' height='80' rx='5' fill='#171D10' stroke='#2B5418' stroke-width='1'/>";
+    svg += "<text x='50' y='120' font-family='monospace' font-size='12' fill='#78E846'>Health: " + u16_to_string(adv.health) + "</text>";
+    svg += "<text x='200' y='120' font-family='monospace' font-size='12' fill='#78E846'>XP: " + u16_to_string(adv.xp) + "</text>";
+    svg += "<text x='50' y='140' font-family='monospace' font-size='12' fill='#78E846'>Gold: " + u16_to_string(adv.gold) + "</text>";
+    svg += "<text x='200' y='140' font-family='monospace' font-size='12' fill='#78E846'>Beast HP: " + u16_to_string(adv.beast_health) + "</text>";
+    svg += "<text x='50' y='160' font-family='monospace' font-size='12' fill='#78E846'>Upgrades: " + u8_to_string(adv.stat_upgrades_available) + "</text>";
+    svg += "<text x='200' y='160' font-family='monospace' font-size='12' fill='#78E846'>Actions: " + u16_to_string(adv.action_count) + "</text>";
+    
+    // Health bar
+    let health_width = (adv.health * 280) / 150; // Normalize to 280px width
+    svg += "<rect x='50' y='190' width='280' height='12' rx='6' fill='#2B5418'/>";
+    svg += "<rect x='50' y='190' width='" + u16_to_string(health_width) + "' height='12' rx='6' fill='#78E846'/>";
+    
+    // Character stats grid
+    svg += "<rect x='40' y='220' width='320' height='120' rx='5' fill='#171D10' stroke='#2B5418' stroke-width='1'/>";
+    svg += "<text x='200' y='240' font-family='monospace' font-size='14' font-weight='bold' fill='#78E846' text-anchor='middle'>STATS</text>";
+    
+    // Stats in 2 columns
+    svg += "<text x='80' y='260' font-family='monospace' font-size='11' fill='#78E846'>STR: " + u8_to_string(adv.stats.strength) + "</text>";
+    svg += "<text x='250' y='260' font-family='monospace' font-size='11' fill='#78E846'>DEX: " + u8_to_string(adv.stats.dexterity) + "</text>";
+    svg += "<text x='80' y='280' font-family='monospace' font-size='11' fill='#78E846'>VIT: " + u8_to_string(adv.stats.vitality) + "</text>";
+    svg += "<text x='250' y='280' font-family='monospace' font-size='11' fill='#78E846'>INT: " + u8_to_string(adv.stats.intelligence) + "</text>";
+    svg += "<text x='80' y='300' font-family='monospace' font-size='11' fill='#78E846'>WIS: " + u8_to_string(adv.stats.wisdom) + "</text>";
+    svg += "<text x='250' y='300' font-family='monospace' font-size='11' fill='#78E846'>CHA: " + u8_to_string(adv.stats.charisma) + "</text>";
+    svg += "<text x='165' y='320' font-family='monospace' font-size='11' fill='#78E846' text-anchor='middle'>LUCK: " + u8_to_string(adv.stats.luck) + "</text>";
+    
+    // Equipment section
+    svg += "<rect x='40' y='360' width='320' height='180' rx='5' fill='#171D10' stroke='#2B5418' stroke-width='1'/>";
+    svg += "<text x='200' y='380' font-family='monospace' font-size='14' font-weight='bold' fill='#78E846' text-anchor='middle'>EQUIPMENT</text>";
+    
+    // Equipment slots - simplified approach
+    // Weapon slot
+    svg += "<rect x='60' y='400' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.weapon.id > 0 {
+        let weapon_color = if adv.equipment.weapon.id % 3 == 0 { "#78E846" } else if adv.equipment.weapon.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='65' y='405' width='40' height='40' rx='2' fill='" + weapon_color + "'/>";
+        svg += "<text x='85' y='430' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.weapon.id) + "</text>";
+    }
+    svg += "<text x='85' y='465' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Weapon</text>";
+    
+    // Chest slot
+    svg += "<rect x='135' y='400' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.chest.id > 0 {
+        let chest_color = if adv.equipment.chest.id % 3 == 0 { "#78E846" } else if adv.equipment.chest.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='140' y='405' width='40' height='40' rx='2' fill='" + chest_color + "'/>";
+        svg += "<text x='160' y='430' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.chest.id) + "</text>";
+    }
+    svg += "<text x='160' y='465' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Chest</text>";
+    
+    // Head slot
+    svg += "<rect x='210' y='400' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.head.id > 0 {
+        let head_color = if adv.equipment.head.id % 3 == 0 { "#78E846" } else if adv.equipment.head.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='215' y='405' width='40' height='40' rx='2' fill='" + head_color + "'/>";
+        svg += "<text x='235' y='430' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.head.id) + "</text>";
+    }
+    svg += "<text x='235' y='465' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Head</text>";
+    
+    // Waist slot
+    svg += "<rect x='285' y='400' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.waist.id > 0 {
+        let waist_color = if adv.equipment.waist.id % 3 == 0 { "#78E846" } else if adv.equipment.waist.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='290' y='405' width='40' height='40' rx='2' fill='" + waist_color + "'/>";
+        svg += "<text x='310' y='430' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.waist.id) + "</text>";
+    }
+    svg += "<text x='310' y='465' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Waist</text>";
+    
+    // Second row
+    // Foot slot
+    svg += "<rect x='60' y='480' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.foot.id > 0 {
+        let foot_color = if adv.equipment.foot.id % 3 == 0 { "#78E846" } else if adv.equipment.foot.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='65' y='485' width='40' height='40' rx='2' fill='" + foot_color + "'/>";
+        svg += "<text x='85' y='510' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.foot.id) + "</text>";
+    }
+    svg += "<text x='85' y='545' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Foot</text>";
+    
+    // Hand slot
+    svg += "<rect x='135' y='480' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.hand.id > 0 {
+        let hand_color = if adv.equipment.hand.id % 3 == 0 { "#78E846" } else if adv.equipment.hand.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='140' y='485' width='40' height='40' rx='2' fill='" + hand_color + "'/>";
+        svg += "<text x='160' y='510' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.hand.id) + "</text>";
+    }
+    svg += "<text x='160' y='545' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Hand</text>";
+    
+    // Neck slot
+    svg += "<rect x='210' y='480' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.neck.id > 0 {
+        let neck_color = if adv.equipment.neck.id % 3 == 0 { "#78E846" } else if adv.equipment.neck.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='215' y='485' width='40' height='40' rx='2' fill='" + neck_color + "'/>";
+        svg += "<text x='235' y='510' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.neck.id) + "</text>";
+    }
+    svg += "<text x='235' y='545' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Neck</text>";
+    
+    // Ring slot
+    svg += "<rect x='285' y='480' width='50' height='50' rx='3' fill='#2B5418' stroke='#78E846' stroke-width='1'/>";
+    if adv.equipment.ring.id > 0 {
+        let ring_color = if adv.equipment.ring.id % 3 == 0 { "#78E846" } else if adv.equipment.ring.id % 3 == 1 { "#E8A746" } else { "#CC6666" };
+        svg += "<rect x='290' y='485' width='40' height='40' rx='2' fill='" + ring_color + "'/>";
+        svg += "<text x='310' y='510' font-family='monospace' font-size='8' fill='#000' text-anchor='middle'>" + u8_to_string(adv.equipment.ring.id) + "</text>";
+    }
+    svg += "<text x='310' y='545' font-family='monospace' font-size='8' fill='#78E846' text-anchor='middle'>Ring</text>";
+    
     svg += "</svg>";
     svg
 }
