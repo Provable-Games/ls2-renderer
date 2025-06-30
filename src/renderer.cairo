@@ -23,8 +23,8 @@ fn adventurer_name(adventurer_id: u64) -> ByteArray {
     name
 }
 
-// Helper: Convert u64 to ByteArray
-fn u64_to_string(mut n: u64) -> ByteArray {
+// Optimized: Single generic number to string conversion
+fn number_to_string(mut n: u64) -> ByteArray {
     let mut out: ByteArray = Default::default();
     if n == 0 {
         out.append_byte('0');
@@ -45,53 +45,24 @@ fn u64_to_string(mut n: u64) -> ByteArray {
     out
 }
 
+// Helper: Convert u64 to ByteArray
+fn u64_to_string(n: u64) -> ByteArray {
+    number_to_string(n)
+}
+
 // Helper: Convert u16 to ByteArray
-fn u16_to_string(mut n: u16) -> ByteArray {
-    let mut out: ByteArray = Default::default();
-    if n == 0 {
-        out.append_byte('0');
-        return out;
-    }
-    let mut digits: Array<u8> = ArrayTrait::new();
-    loop {
-        if n == 0 { break; }
-        digits.append((n % 10).try_into().unwrap() + '0');
-        n = n / 10;
-    };
-    let mut i = digits.len();
-    loop {
-        if i == 0 { break; }
-        i -= 1;
-        out.append_byte(*digits[i]);
-    };
-    out
+fn u16_to_string(n: u16) -> ByteArray {
+    number_to_string(n.into())
+}
+
+// Helper: Convert u8 to ByteArray
+fn u8_to_string(n: u8) -> ByteArray {
+    number_to_string(n.into())
 }
 
 // Helper: Convert bool to ByteArray
 fn bool_to_string(b: bool) -> ByteArray {
     if b { "true" } else { "false" }
-}
-
-// Helper: Convert u8 to ByteArray
-fn u8_to_string(mut n: u8) -> ByteArray {
-    let mut out: ByteArray = Default::default();
-    if n == 0 {
-        out.append_byte('0');
-        return out;
-    }
-    let mut digits: Array<u8> = ArrayTrait::new();
-    loop {
-        if n == 0 { break; }
-        digits.append((n % 10).try_into().unwrap() + '0');
-        n = n / 10;
-    };
-    let mut i = digits.len();
-    loop {
-        if i == 0 { break; }
-        i -= 1;
-        out.append_byte(*digits[i]);
-    };
-    out
 }
 
 // Helper: Convert Item to string
@@ -101,53 +72,20 @@ fn item_to_string(item: Item) -> ByteArray {
     s
 }
 
-// Helper: Convert Equipment to string
+// Optimized: Equipment to string conversion
 fn equipment_to_string(e: Equipment) -> ByteArray {
-    let mut s: ByteArray = "{";
-    s += "weapon:" + item_to_string(e.weapon) + ",";
-    s += "chest:" + item_to_string(e.chest) + ",";
-    s += "head:" + item_to_string(e.head) + ",";
-    s += "waist:" + item_to_string(e.waist) + ",";
-    s += "foot:" + item_to_string(e.foot) + ",";
-    s += "hand:" + item_to_string(e.hand) + ",";
-    s += "neck:" + item_to_string(e.neck) + ",";
-    s += "ring:" + item_to_string(e.ring) + "}";
-    s
+    "{weapon:" + item_to_string(e.weapon) + ",chest:" + item_to_string(e.chest) + ",head:" + item_to_string(e.head) + ",waist:" + item_to_string(e.waist) + ",foot:" + item_to_string(e.foot) + ",hand:" + item_to_string(e.hand) + ",neck:" + item_to_string(e.neck) + ",ring:" + item_to_string(e.ring) + "}"
 }
 
-// Helper: Convert Bag to string (summary)
+// Optimized: Bag to string conversion
 fn bag_to_string(bag: Bag) -> ByteArray {
-    let mut s: ByteArray = "{";
-    s += "mutated:" + bool_to_string(bag.mutated) + ",items:[";
-    s += item_to_string(bag.item_1) + ",";
-    s += item_to_string(bag.item_2) + ",";
-    s += item_to_string(bag.item_3) + ",";
-    s += item_to_string(bag.item_4) + ",";
-    s += item_to_string(bag.item_5) + ",";
-    s += item_to_string(bag.item_6) + ",";
-    s += item_to_string(bag.item_7) + ",";
-    s += item_to_string(bag.item_8) + ",";
-    s += item_to_string(bag.item_9) + ",";
-    s += item_to_string(bag.item_10) + ",";
-    s += item_to_string(bag.item_11) + ",";
-    s += item_to_string(bag.item_12) + ",";
-    s += item_to_string(bag.item_13) + ",";
-    s += item_to_string(bag.item_14) + ",";
-    s += item_to_string(bag.item_15) + "]}";
-    s
+    let items_str = item_to_string(bag.item_1) + "," + item_to_string(bag.item_2) + "," + item_to_string(bag.item_3) + "," + item_to_string(bag.item_4) + "," + item_to_string(bag.item_5) + "," + item_to_string(bag.item_6) + "," + item_to_string(bag.item_7) + "," + item_to_string(bag.item_8) + "," + item_to_string(bag.item_9) + "," + item_to_string(bag.item_10) + "," + item_to_string(bag.item_11) + "," + item_to_string(bag.item_12) + "," + item_to_string(bag.item_13) + "," + item_to_string(bag.item_14) + "," + item_to_string(bag.item_15);
+    "{mutated:" + bool_to_string(bag.mutated) + ",items:[" + items_str + "]}"
 }
 
-// Helper: Convert Stats to string
+// Optimized: Stats to string conversion
 fn stats_to_string(stats: Stats) -> ByteArray {
-    let mut s: ByteArray = "{";
-    s += "strength:" + u8_to_string(stats.strength) + ",";
-    s += "dexterity:" + u8_to_string(stats.dexterity) + ",";
-    s += "vitality:" + u8_to_string(stats.vitality) + ",";
-    s += "intelligence:" + u8_to_string(stats.intelligence) + ",";
-    s += "wisdom:" + u8_to_string(stats.wisdom) + ",";
-    s += "charisma:" + u8_to_string(stats.charisma) + ",";
-    s += "luck:" + u8_to_string(stats.luck) + "}";
-    s
+    "{strength:" + u8_to_string(stats.strength) + ",dexterity:" + u8_to_string(stats.dexterity) + ",vitality:" + u8_to_string(stats.vitality) + ",intelligence:" + u8_to_string(stats.intelligence) + ",wisdom:" + u8_to_string(stats.wisdom) + ",charisma:" + u8_to_string(stats.charisma) + ",luck:" + u8_to_string(stats.luck) + "}"
 }
 
 // Helper: Generate optimized animated SVG with four themed pages
@@ -409,6 +347,7 @@ fn get_u8(opt: Option<u8>) -> u8 {
     }
 }
 
+// Optimized base64 encoding
 fn bytes_base64_encode(mut bytes: ByteArray) -> ByteArray {
     let base64_chars = get_base64_char_set();
     let mut result: ByteArray = Default::default();
@@ -468,7 +407,7 @@ fn bytes_base64_encode(mut bytes: ByteArray) -> ByteArray {
     result
 }
 
-// Helper: JSON metadata (expanded)
+// Optimized JSON metadata generation
 fn json_metadata(adventurer_id: u64, name: ByteArray, svg: ByteArray, adv: Adventurer, bag: Bag) -> ByteArray {
     let image = "data:image/svg+xml;base64," + bytes_base64_encode(svg);
     let mut json: ByteArray = "{";
