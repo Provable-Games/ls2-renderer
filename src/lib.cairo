@@ -9,6 +9,5 @@ pub mod mocks {
 }
 
 pub mod nfts {
-    // pub mod beast;
     pub mod ls2_nft;
 }

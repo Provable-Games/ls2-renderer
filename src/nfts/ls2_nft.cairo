@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts for Cairo v2.0.0 (presets/src/erc721.cairo)
 
-/// # ERC721 Preset
-///
-/// The upgradeable ERC721 contract offers a batch-mint mechanism that
-/// can only be executed once upon contract construction.
-///
-/// For more complex or custom contracts, use Wizard for Cairo
-/// https://wizard.openzeppelin.com/cairo
-/// 
-
 use starknet::ContractAddress;
 
 #[starknet::interface]
@@ -38,6 +29,9 @@ pub mod ls2_nft {
     #[abi(embed_v0)]
     impl ERC721CamelOnlyImpl = ERC721Component::ERC721CamelOnlyImpl<ContractState>;
     impl ERC721InternalImpl = ERC721Component::InternalImpl<ContractState>;
+    
+    #[abi(embed_v0)]
+    impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
 
     #[storage]
     pub struct Storage {
