@@ -1,9 +1,9 @@
 use starknet::{ContractAddress, contract_address_const};
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address};
 use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait, IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait};
-use ls2_renderer::{IOpenMintDispatcher, IOpenMintDispatcherTrait};
-use ls2_renderer::mock_adventurer::{Adventurer, Bag, Item, Equipment, Stats};
-use ls2_renderer::mock_adventurer::{IMockAdventurerDispatcher, IMockAdventurerDispatcherTrait};
+use ls2_renderer::nfts::ls2_nft::{IOpenMintDispatcher, IOpenMintDispatcherTrait};
+use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Item, Equipment, Stats};
+use ls2_renderer::mocks::mock_adventurer::{IMockAdventurerDispatcher, IMockAdventurerDispatcherTrait};
 use core::array::ArrayTrait;
 use core::byte_array::ByteArrayTrait;
 
@@ -12,7 +12,7 @@ fn deploy_contract(mock_adventurer_addr: ContractAddress) -> ContractAddress {
     let symbol: ByteArray = "TNFT";
     let base_uri: ByteArray = "https://example.com/";
 
-    let contract = declare("ERC721Upgradeable").unwrap().contract_class();
+    let contract = declare("ls2_nft").unwrap().contract_class();
     let mut calldata = array![];
     name.serialize(ref calldata);
     symbol.serialize(ref calldata);
@@ -227,4 +227,28 @@ fn test_mock_adventurer_deterministic() {
         mutated: (adventurer_id % 2_u64) == 1_u64,
     };
     assert_eq!(bag, expected_bag);
+}
+
+#[test]
+fn test_sample_token_uri() {
+    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let calldata = ArrayTrait::<felt252>::new();
+    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_addr);
+    let mint_dispatcher = IOpenMintDispatcher { contract_address };
+    let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
+    let recipient = contract_address_const::<0x123>();
+    
+    // Mint a token
+    mint_dispatcher.mint(recipient);
+    
+    // Get the token URI and print it as a sample
+    let uri = metadata_dispatcher.token_uri(1);
+    
+    // Basic assertions
+    assert(ByteArrayTrait::len(@uri) > 0, 'empty uri');
+    assert(ByteArrayTrait::len(@uri) > 50, 'uri too short');
+    
+    // Print the sample token URI for demonstration
+    println!("Sample Token URI for token #1: {}", uri);
 }

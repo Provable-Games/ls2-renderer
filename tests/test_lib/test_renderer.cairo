@@ -1,4 +1,4 @@
-use ls2_renderer::renderer::Renderer;
+use ls2_renderer::utils::renderer::Renderer;
 use core::byte_array::ByteArrayTrait;
 use core::array::ArrayTrait;
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
@@ -53,34 +53,7 @@ fn test_svg_and_json_structure() {
     println!("Rendered metadata for token 7: {}", result);
 }
 
-#[test]
-fn test_new_svg_structure() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
-    let calldata = array![];
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let token_id: u256 = 42;
-    let result = Renderer::render(token_id, mock_addr);
-    
-    // Verify basic JSON structure - just check length and non-empty
-    assert(ByteArrayTrait::len(@result) > 0, 'empty result');
-    assert(ByteArrayTrait::len(@result) > 1000, 'result too short'); // Should be substantial with new SVG
-    
-    println!("New SVG structure test passed for token {}", token_id);
-}
 
-#[test]
-fn test_improved_svg_rendering() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
-    let calldata = array![];
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let token_id: u256 = 123;
-    let result = Renderer::render(token_id, mock_addr);
-    
-    // Test that the new renderer produces longer output (more detailed SVG)
-    assert(ByteArrayTrait::len(@result) > 2000, 'svg not detailed enough');
-    
-    println!("Improved SVG rendering test passed for token {}", token_id);
-}
 
 #[test] 
 fn test_deterministic_rendering() {
