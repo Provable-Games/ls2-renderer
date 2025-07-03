@@ -151,28 +151,105 @@ fn generate_logo() -> ByteArray {
     "<g transform='translate(25,25) scale(4)'>" + logo() + "</g>"
 }
 
-// @notice Generates JSON metadata for the adventurer token uri (adapted from death-mountain)
+// @notice Generates the shinobi SVG template with dynamic substitution
+// @param adventurer_id The adventurer's ID
+// @param adventurer The adventurer
+// @param adventurer_name The adventurer's name
+// @param bag The adventurer's bag
+// @return The generated shinobi SVG with dynamic values
+fn create_shinobi_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
+    let mut _name = Default::default();
+    _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
+
+    let _level = format!("{}", (adventurer.xp / 100) + 1);
+    let _str = format!("{}", adventurer.stats.strength);
+    let _dex = format!("{}", adventurer.stats.dexterity);
+    let _int = format!("{}", adventurer.stats.intelligence);
+    let _vit = format!("{}", adventurer.stats.vitality);
+    let _wis = format!("{}", adventurer.stats.wisdom);
+    let _cha = format!("{}", adventurer.stats.charisma);
+    let _luck = format!("{}", adventurer.stats.luck);
+    let _health = format!("{}", adventurer.health);
+    let _max_health = format!("{}", 100); // Using 100 as max health for display
+    let _xp = format!("{}", adventurer.xp);
+
+    // Generate equipped item names for inventory slots
+    let _weapon_name = generate_item(adventurer.equipment.weapon, false);
+    let _chest_name = generate_item(adventurer.equipment.chest, false);
+    let _head_name = generate_item(adventurer.equipment.head, false);
+    let _waist_name = generate_item(adventurer.equipment.waist, false);
+    let _foot_name = generate_item(adventurer.equipment.foot, false);
+    let _hand_name = generate_item(adventurer.equipment.hand, false);
+    let _neck_name = generate_item(adventurer.equipment.neck, false);
+    let _ring_name = generate_item(adventurer.equipment.ring, false);
+
+    // Create the complete shinobi SVG with dynamic values
+    let mut svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"550\"><defs><filter id=\"s\"><feDropShadow dx=\"0\" dy=\"10\" flood-opacity=\".3\" stdDeviation=\"10\"/></filter><style>text{font-family:&quot;Courier New&quot;,&quot;Monaco&quot;,&quot;Lucida Console&quot;,monospace;font-weight:700;text-rendering:optimizeSpeed;shape-rendering:crispEdges}</style></defs><rect width=\"360\" height=\"510\" x=\"20\" y=\"20\" filter=\"url(#s)\" rx=\"24\"/><path d=\"M30 30h340v490H30z\"/><path fill=\"#78E846\" fill-rule=\"evenodd\" d=\"m92 52-1 2h-1v15h6v2l1 3h3c5 0 5 0 5-3v-2h6V54h-1l-1-2v-2H92v2Zm7 10v3h-4v-3l-1-3h5v3Zm8 0v3h-4v-6h4v3Zm-4 5v2h-4v-4h4v2Zm-13 5v20h8l7 1v-5H94V71h-2l-2 1Zm6 4v5l1 5h10v8h-8l-9 1v4h19v-2l1-2h1v-7l1-6h-11v-2h10v-5h-7l-8 1Z\" clip-rule=\"evenodd\"/><g fill=\"#78E846\"><text x=\"130\" y=\"70\">";
+    svg += _name.clone();
+    svg += "</text><text x=\"250\" y=\"70\" font-size=\"12\">LEVEL ";
+    svg += _level.clone();
+    svg += "</text><text x=\"40\" y=\"100\" font-size=\"14\">STR</text><text x=\"40\" y=\"120\" font-size=\"20\">";
+    svg += _str;
+    svg += "</text><text x=\"40\" y=\"150\" font-size=\"14\">DEX</text><text x=\"40\" y=\"170\" font-size=\"20\">";
+    svg += _dex;
+    svg += "</text><text x=\"40\" y=\"200\" font-size=\"14\">INT</text><text x=\"40\" y=\"220\" font-size=\"20\">";
+    svg += _int;
+    svg += "</text><text x=\"40\" y=\"250\" font-size=\"14\">HIT</text><text x=\"40\" y=\"270\" font-size=\"20\">";
+    svg += _vit;
+    svg += "</text><text x=\"40\" y=\"300\" font-size=\"14\">WIS</text><text x=\"40\" y=\"320\" font-size=\"20\">";
+    svg += _wis;
+    svg += "</text><text x=\"40\" y=\"350\" font-size=\"14\">CHA</text><text x=\"40\" y=\"370\" font-size=\"20\">";
+    svg += _cha;
+    svg += "</text><text x=\"40\" y=\"400\" font-size=\"14\">LUCK</text><text x=\"40\" y=\"420\" font-size=\"20\">";
+    svg += _luck;
+    svg += "</text><text x=\"90\" y=\"160\" font-size=\"12\">INVENTORY</text><text x=\"90\" y=\"135\" font-size=\"12\">";
+    svg += _health;
+    svg += "/";
+    svg += _max_health;
+    svg += " HP</text></g><path fill=\"#2C1A0A\" stroke=\"#78E846\" d=\"M90 115h200v8H90z\"/><path fill=\"#78E846\" d=\"M91 116h160v6H91z\"/><rect width=\"50\" height=\"25\" x=\"320\" y=\"55\" fill=\"#E8A746\" rx=\"4\"/><text x=\"330\" y=\"70\" fill=\"#2C1A0A\" font-size=\"14\">";
+    svg += _xp.clone();
+    svg += "</text><text x=\"325\" y=\"50\" fill=\"#E8A746\" font-size=\"10\">XP</text>";
+    svg += "<path fill=\"#2C1A0A\" stroke=\"#78E846\" d=\"M90 180h40v40H90zm60 0h40v40h-40zm60 0h40v40h-40zm60 0h40v40h-40zM90 250h40v40H90zm60 0h40v40h-40zm60 0h40v40h-40zm60 0h40v40h-40z\"/><g fill=\"#78E846\"><path d=\"M95 190h2v20h-2z\"/><path d=\"M93 190h6v4h-6zm1 20h4v4h-4zm61-20h20v15h-20zm5 15h10v8h-10zm55-5h20v15h-20z\"/><path d=\"M220 195h10v8h-10zm55 2h20v4h-20z\"/><path d=\"M280 193h2v16h-2zm8 2h4v8h-4zM95 260h2v20h-2zm3 3h12v2H98zm0 10h12v2H98zm12-8h2v8h-2zm50-2h10v16h-10z\"/><path d=\"M162 261h6v4h-6zm53 9h8v10h-8zm12 0h8v10h-8z\"/><path d=\"M215 267h20v6h-20zm63-4h14v14h-14zm-153-78h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8zm-180 70h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8z\"/></g><path fill=\"#2C1A0A\" d=\"M217 205h4v6h-4zm-54 60h4v8h-4zm119 2h6v6h-6z\"/><g fill=\"#78E846\" font-size=\"8\"><text x=\"95\" y=\"230\">";
+    svg += _weapon_name;
+    svg += "</text><text x=\"155\" y=\"230\">";
+    svg += _chest_name;
+    svg += "</text><text x=\"215\" y=\"230\">";
+    svg += _head_name;
+    svg += "</text><text x=\"275\" y=\"230\">";
+    svg += _waist_name;
+    svg += "</text><text x=\"95\" y=\"300\">";
+    svg += _foot_name;
+    svg += "</text><text x=\"155\" y=\"300\">";
+    svg += _hand_name;
+    svg += "</text><text x=\"215\" y=\"300\">";
+    svg += _neck_name;
+    svg += "</text><text x=\"275\" y=\"300\">";
+    svg += _ring_name;
+    svg += "</text></g><g font-size=\"6\"><text x=\"126\" y=\"192\">01</text><text x=\"186\" y=\"192\">02</text><text x=\"246\" y=\"192\">03</text><text x=\"306\" y=\"192\">04</text><text x=\"126\" y=\"262\">05</text><text x=\"186\" y=\"262\">06</text><text x=\"246\" y=\"262\">07</text><text x=\"306\" y=\"262\">08</text></g><path fill=\"#2C1A0A\" stroke=\"#78E846\" d=\"M40 430h320v80H40z\"/><g fill=\"#78E846\" font-size=\"12\"><text x=\"50\" y=\"450\">ADVENTURER #";
+    svg += format!("{}", adventurer_id);
+    svg += "</text><text x=\"50\" y=\"470\">LEVEL ";
+    svg += _level;
+    svg += " - ";
+    svg += _xp;
+    svg += " XP</text></g></svg>";
+
+    svg
+}
+
+// @notice Generates JSON metadata for the adventurer token uri using Shinobi template
 // @param adventurer_id The adventurer's ID
 // @param adventurer The adventurer
 // @param adventurer_name The adventurer's name
 // @param bag The adventurer's bag
 // @return The generated JSON metadata
 pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
-    let rect = create_rect();
-
-    let logo_element = generate_logo();
-
     let mut _name = Default::default();
     _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
 
     let _adventurer_id = format!("{}", adventurer_id);
     let _xp = format!("{}", adventurer.xp);
-    let _level = format!("{}", (adventurer.xp / 100) + 1); // Simple level calculation
-
+    let _level = format!("{}", (adventurer.xp / 100) + 1);
     let _health = format!("{}", adventurer.health);
-
-    let _max_health = format!("{}", 150); // Assuming max health is 150
-
     let _gold = format!("{}", adventurer.gold);
     let _str = format!("{}", adventurer.stats.strength);
     let _dex = format!("{}", adventurer.stats.dexterity);
@@ -182,94 +259,25 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
     let _cha = format!("{}", adventurer.stats.charisma);
     let _luck = format!("{}", adventurer.stats.luck);
 
-    // Equipped items
+    // Generate equipped item names
     let _equiped_weapon = generate_item(adventurer.equipment.weapon, false);
     let _equiped_chest = generate_item(adventurer.equipment.chest, false);
     let _equiped_head = generate_item(adventurer.equipment.head, false);
     let _equiped_waist = generate_item(adventurer.equipment.waist, false);
-    let _equiped_foot = generate_item(adventurer.equipment.foot, false);
+    let _equiped_foot = generate_item(adventurer.equipment.foot, false);  
     let _equiped_hand = generate_item(adventurer.equipment.hand, false);
     let _equiped_neck = generate_item(adventurer.equipment.neck, false);
     let _equiped_ring = generate_item(adventurer.equipment.ring, false);
 
-    // Bag items
-    let _bag_item_1 = generate_item(bag.item_1, true);
-    let _bag_item_2 = generate_item(bag.item_2, true);
-    let _bag_item_3 = generate_item(bag.item_3, true);
-    let _bag_item_4 = generate_item(bag.item_4, true);
-    let _bag_item_5 = generate_item(bag.item_5, true);
-    let _bag_item_6 = generate_item(bag.item_6, true);
-    let _bag_item_7 = generate_item(bag.item_7, true);
-    let _bag_item_8 = generate_item(bag.item_8, true);
-    let _bag_item_9 = generate_item(bag.item_9, true);
-    let _bag_item_10 = generate_item(bag.item_10, true);
-    let _bag_item_11 = generate_item(bag.item_11, true);
-    let _bag_item_12 = generate_item(bag.item_12, true);
-    let _bag_item_13 = generate_item(bag.item_13, true);
-    let _bag_item_14 = generate_item(bag.item_14, true);
-    let _bag_item_15 = generate_item(bag.item_15, true);
-
-    // Combine all SVG elements following the death-mountain pattern but with retained border structure
-    let mut elements = array![
-        rect,
-        logo_element,
-        create_text(_name.clone(), "30", "117", "20", "middle", "left"),
-        create_text("#" + _adventurer_id.clone(), "123", "61", "24", "middle", "left"),
-        create_text("XP: " + _xp.clone(), "30", "150", "20", "middle", "left"),
-        create_text("LVL: " + _level.clone(), "300", "150", "20", "middle", "end"),
-        create_text(_health.clone() + " / " + _max_health.clone() + " HP", "570", "58", "20", "right", "end"),
-        create_text(_gold.clone() + " GOLD", "570", "93", "20", "right", "end"),
-        create_text(_str.clone() + " STR", "570", "128", "20", "right", "end"),
-        create_text(_dex.clone() + " DEX", "570", "163", "20", "right", "end"),
-        create_text(_int.clone() + " INT", "570", "198", "20", "right", "end"),
-        create_text(_vit.clone() + " VIT", "570", "233", "20", "right", "end"),
-        create_text(_wis.clone() + " WIS", "570", "268", "20", "right", "end"),
-        create_text(_cha.clone() + " CHA", "570", "303", "20", "right", "end"),
-        create_text(_luck.clone() + " LUCK", "570", "338", "20", "right", "end"),
-        create_text("Equipped", "30", "200", "32", "middle", "right"),
-        create_text("Bag", "30", "580", "32", "middle", "right"),
-        create_item_element("25", "240", weapon()),
-        create_text(_equiped_weapon.clone(), "60", "253", "16", "middle", "start"),
-        create_item_element("24", "280", chest()),
-        create_text(_equiped_chest.clone(), "60", "292", "16", "middle", "left"),
-        create_item_element("25", "320", head()),
-        create_text(_equiped_head.clone(), "60", "331", "16", "middle", "left"),
-        create_item_element("25", "360", waist()),
-        create_text(_equiped_waist.clone(), "60", "370", "16", "middle", "left"),
-        create_item_element("25", "400", foot()),
-        create_text(_equiped_foot.clone(), "60", "409", "16", "middle", "left"),
-        create_item_element("27", "435", hand()),
-        create_text(_equiped_hand.clone(), "60", "448", "16", "middle", "left"),
-        create_item_element("25", "475", neck()),
-        create_text(_equiped_neck.clone(), "60", "487", "16", "middle", "left"),
-        create_item_element("25", "515", ring()),
-        create_text(_equiped_ring.clone(), "60", "526", "16", "middle", "left"),
-        create_text("1. " + _bag_item_1.clone(), "30", "624", "16", "middle", "left"),
-        create_text("2. " + _bag_item_2.clone(), "30", "658", "16", "middle", "left"),
-        create_text("3. " + _bag_item_3.clone(), "30", "692", "16", "middle", "left"),
-        create_text("4. " + _bag_item_4.clone(), "30", "726", "16", "middle", "left"),
-        create_text("5. " + _bag_item_5.clone(), "30", "760", "16", "middle", "left"),
-        create_text("6. " + _bag_item_6.clone(), "30", "794", "16", "middle", "left"),
-        create_text("7. " + _bag_item_7.clone(), "30", "828", "16", "middle", "left"),
-        create_text("8. " + _bag_item_8.clone(), "30", "862", "16", "middle", "left"),
-        create_text("9. " + _bag_item_9.clone(), "321", "624", "16", "middle", "left"),
-        create_text("10. " + _bag_item_10.clone(), "311", "658", "16", "middle", "left"),
-        create_text("11. " + _bag_item_11.clone(), "311", "692", "16", "middle", "left"),
-        create_text("12. " + _bag_item_12.clone(), "311", "726", "16", "middle", "left"),
-        create_text("13. " + _bag_item_13.clone(), "311", "760", "16", "middle", "left"),
-        create_text("14. " + _bag_item_14.clone(), "311", "794", "16", "middle", "left"),
-        create_text("15. " + _bag_item_15.clone(), "311", "828", "16", "middle", "left"),
-    ]
-        .span();
-
-    let image = create_svg(combine_elements(ref elements));
+    // Generate the shinobi SVG with dynamic data
+    let image = create_shinobi_svg(adventurer_id, adventurer, adventurer_name, bag);
 
     let base64_image = format!("data:image/svg+xml;base64,{}", bytes_base64_encode(image));
 
-    // Build JSON metadata string manually (simplified approach)
+    // Build JSON metadata string
     let mut metadata: ByteArray = "{";
-    metadata += "\"name\":\"Adventurer #" + _adventurer_id + "\",";
-    metadata += "\"description\":\"An NFT representing ownership of a game within Death Mountain.\",";
+    metadata += "\"name\":\"" + _name.clone() + " #" + _adventurer_id + "\",";
+    metadata += "\"description\":\"A legendary adventurer NFT with on-chain metadata rendered using the Shinobi template.\",";
     metadata += "\"image\":\"" + base64_image + "\",";
     metadata += "\"attributes\":[";
     metadata += "{\"trait_type\":\"Name\",\"value\":\"" + _name + "\"},";
