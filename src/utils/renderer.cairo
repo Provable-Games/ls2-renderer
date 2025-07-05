@@ -25,8 +25,8 @@ pub impl RendererImpl of Renderer {
         let adv = dispatcher.get_adventurer(adventurer_id);
         let bag = dispatcher.get_bag(adventurer_id);
         
-        // Use the new death-mountain style metadata generation with border structure preserved
-        let adventurer_name: felt252 = 'Adventurer'; // Simple name for now
+        // Use dynamic adventurer name from mock contract (matching death-mountain pattern)
+        let adventurer_name = dispatcher.get_adventurer_name(adventurer_id);
         create_metadata(adventurer_id, adv, adventurer_name, bag)
     }
 }

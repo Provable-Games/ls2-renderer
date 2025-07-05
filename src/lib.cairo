@@ -6,6 +6,7 @@ pub mod utils {
 
 pub mod mocks {
     pub mod mock_adventurer;
+    pub mod mock_beast;
 }
 
 pub mod nfts {

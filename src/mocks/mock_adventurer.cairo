@@ -67,6 +67,8 @@ pub struct Bag {
 pub trait IMockAdventurer<T> {
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
+    fn get_adventurer_name(self: @T, adventurer_id: u64) -> felt252;
+    fn get_level(self: @T, xp: u16) -> u8;
 }
 
 #[starknet::contract]
@@ -128,6 +130,38 @@ pub mod mock_adventurer {
                 item_15: Item { id: ((adventurer_id + 15) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 16) % 100_u64).try_into().unwrap() },
                 mutated: (adventurer_id % 2_u64) == 1_u64,
             }
+        }
+
+        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> felt252 {
+            // Generate deterministic names based on adventurer ID
+            match adventurer_id % 20 {
+                0 => 'Aragorn',
+                1 => 'Legolas',
+                2 => 'Gimli',
+                3 => 'Gandalf',
+                4 => 'Frodo',
+                5 => 'Samwise',
+                6 => 'Boromir',
+                7 => 'Merlin',
+                8 => 'Arthur',
+                9 => 'Lancelot',
+                10 => 'Galahad',
+                11 => 'Percival',
+                12 => 'Tristan',
+                13 => 'Gareth',
+                14 => 'Gawain',
+                15 => 'Robin',
+                16 => 'Sherlock',
+                17 => 'Watson',
+                18 => 'Hercules',
+                _ => 'Shinobi',
+            }
+        }
+
+        fn get_level(self: @ContractState, xp: u16) -> u8 {
+            // Simple level calculation: every 100 XP = 1 level, minimum level 1
+            let level = (xp / 100) + 1;
+            if level > 255 { 255_u8 } else { level.try_into().unwrap() }
         }
     }
 } 
