@@ -1,4 +1,5 @@
 use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Item};
+use ls2_renderer::mocks::mock_beast::{Beast};
 use ls2_renderer::utils::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 
 // @notice Generates the LS logo svg
@@ -151,7 +152,69 @@ fn generate_logo() -> ByteArray {
     "<g transform='translate(25,25) scale(4)'>" + logo() + "</g>"
 }
 
-// @notice Generates the shinobi SVG template with dynamic substitution
+// @notice Generates the shinobi SVG template with dynamic substitution (4-page version with battle)
+// @param adventurer_id The adventurer's ID
+// @param adventurer The adventurer
+// @param adventurer_name The adventurer's name
+// @param bag The adventurer's bag
+// @param beast The beast being fought
+// @param beast_name The name of the beast
+// @return The generated shinobi SVG with dynamic values including battle page
+fn create_shinobi_svg_with_battle(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag, beast: Beast, beast_name: felt252) -> ByteArray {
+    let mut _name = Default::default();
+    _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
+
+    let mut _beast_name = Default::default();
+    _beast_name.append_word(beast_name, U256BytesUsedTraitImpl::bytes_used(beast_name.into()).into());
+
+    let _level = format!("{}", (adventurer.xp / 100) + 1);
+    let _str = format!("{}", adventurer.stats.strength);
+    let _dex = format!("{}", adventurer.stats.dexterity);
+    let _int = format!("{}", adventurer.stats.intelligence);
+    let _vit = format!("{}", adventurer.stats.vitality);
+    let _wis = format!("{}", adventurer.stats.wisdom);
+    let _cha = format!("{}", adventurer.stats.charisma);
+    let _luck = format!("{}", adventurer.stats.luck);
+    let _health = format!("{}", adventurer.health);
+    let _max_health = format!("{}", 100); // Using 100 as max health for display
+    let _xp = format!("{}", adventurer.xp);
+    
+    // Beast stats for battle interface
+    let _beast_level = format!("{}", beast.combat_spec.level);
+    let _beast_health = format!("{}", beast.starting_health);
+    let _beast_max_health = format!("{}", beast.starting_health); // For display purposes
+    let _beast_power = format!("{}", beast.combat_spec.level + 20); // Simulated power calculation
+
+    // Calculate battle damage (simplified)
+    let damage_dealt = if adventurer.stats.strength > 10 { 10 } else { adventurer.stats.strength.into() };
+    let _damage = format!("{}", damage_dealt);
+
+    // Generate equipped item names for inventory slots
+    let _weapon_name = generate_item(adventurer.equipment.weapon, false);
+    let _chest_name = generate_item(adventurer.equipment.chest, false);
+    let _head_name = generate_item(adventurer.equipment.head, false);
+    let _waist_name = generate_item(adventurer.equipment.waist, false);
+    let _foot_name = generate_item(adventurer.equipment.foot, false);
+    let _hand_name = generate_item(adventurer.equipment.hand, false);
+    let _neck_name = generate_item(adventurer.equipment.neck, false);
+    let _ring_name = generate_item(adventurer.equipment.ring, false);
+
+    // Generate bag item names for page 2
+    let _bag_item_1 = generate_item(bag.item_1, true);
+    let _bag_item_2 = generate_item(bag.item_2, true);
+    let _bag_item_3 = generate_item(bag.item_3, true);
+
+    // Create the 4-page SVG with simplified battle interface (based on multi_page_nft.svg template)
+    format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"550\" viewBox=\"0 0 400 550\"><defs><filter id=\"s\"><feDropShadow dx=\"0\" dy=\"10\" flood-opacity=\".3\" stdDeviation=\"10\"/></filter><style>@import url(https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&amp;family=MedievalSharp&amp;display=swap);text{{font-family:\"Pixelify Sans\",\"Courier New\",\"Monaco\",\"Lucida Console\",monospace;font-weight:700;text-rendering:optimizeSpeed;shape-rendering:crispEdges}}</style><linearGradient id=\"border_gradient\" x1=\"200\" y1=\"20\" x2=\"200\" y2=\"530\" gradientUnits=\"userSpaceOnUse\"><stop stop-color=\"#FE9676\"/><stop offset=\"1\" stop-color=\"#58F54C\"/></linearGradient><linearGradient id=\"battle_gradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FF4444\"/><stop offset=\"100%\" stop-color=\"#880000\"/></linearGradient></defs><g id=\"slideContainer\"><g id=\"page1\"><path d=\"M20 20h360v510H20z\" filter=\"url(#s)\"/><path d=\"M30 30h340v490H30z\"/><path fill=\"#78E846\" d=\"M20 20h360v2H20zm0 508h360v2H20zm0-506h2v506h-2zm358 0h2v506h-2z\"/><path fill=\"#78E846\" fill-rule=\"evenodd\" d=\"m92 52-1 2h-1v15h6v2l1 3h3c5 0 5 0 5-3v-2h6V54h-1l-1-2v-2H92v2Zm7 10v3h-4v-3l-1-3h5v3Zm8 0v3h-4v-6h4v3Zm-4 5v2h-4v-4h4v2Zm-13 5v20h8l7 1v-5H94V71h-2l-2 1Zm6 4v5l1 5h10v8h-8l-9 1v4h19v-2l1-2h1v-7l1-6h-11v-2h10v-5h-7l-8 1Z\" clip-rule=\"evenodd\"/><g fill=\"#78E846\" font-size=\"14\"><text x=\"130\" y=\"70\" font-size=\"16\" style=\"font-family:&quot;MedievalSharp&quot;,&quot;Pixelify Sans&quot;,&quot;Courier New&quot;,&quot;Monaco&quot;,&quot;Lucida Console&quot;,monospace\">{}</text><text x=\"250\" y=\"70\" font-size=\"12\">LEVEL {}</text><text x=\"40\" y=\"100\">STR</text><text x=\"40\" y=\"120\" font-size=\"20\">{}</text><text x=\"40\" y=\"150\">DEX</text><text x=\"40\" y=\"170\" font-size=\"20\">{}</text><text x=\"40\" y=\"200\">INT</text><text x=\"40\" y=\"220\" font-size=\"20\">{}</text><text x=\"40\" y=\"250\">HIT</text><text x=\"40\" y=\"270\" font-size=\"20\">{}</text><text x=\"40\" y=\"300\">WIS</text><text x=\"40\" y=\"320\" font-size=\"20\">{}</text><text x=\"40\" y=\"350\">CHA</text><text x=\"40\" y=\"370\" font-size=\"20\">{}</text><text x=\"40\" y=\"400\">LUCK</text><text x=\"40\" y=\"420\" font-size=\"20\">{}</text><text x=\"90\" y=\"160\" font-size=\"12\">INVENTORY</text><text x=\"90\" y=\"135\" font-size=\"12\">{}/{} HP</text></g><path fill=\"#2C1A0A\" stroke=\"#78E846\" d=\"M90 115h200v8H90z\"/><path fill=\"#78E846\" d=\"M91 116h160v6H91z\"/><path d=\"M320 55h50v25H320z\" fill=\"#E8A746\" rx=\"4\"/><text x=\"330\" y=\"70\" fill=\"#2C1A0A\" font-size=\"14\">{}</text><text x=\"325\" y=\"50\" fill=\"#E8A746\" font-size=\"10\">XP</text><path fill=\"#2C1A0A\" stroke=\"#78E846\" d=\"M90 180h40v40H90zm60 0h40v40h-40zm60 0h40v40h-40zm60 0h40v40h-40zM90 250h40v40H90zm60 0h40v40h-40zm60 0h40v40h-40zm60 0h40v40h-40z\"/><path fill=\"#78E846\" d=\"M95 190h2v20h-2m-2-20h6v4h-6zm1 20h4v4h-4zm61-20h20v15h-20zm5 15h10v8h-10zm55-5h20v15h-20m5-20h10v8h-10zm55 2h20v4h-20m5-8h2v16h-2zm8 2h4v8h-4M95 260h2v20h-2zm3 3h12v2H98zm0 10h12v2H98zm12-8h2v8h-2zm50-2h10v16h-10m2-18h6v4h-6zm53 9h8v10h-8zm12 0h8v10h-8m-12-13h20v6h-20zm63-4h14v14h-14zm-153-78h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8zm-180 70h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8zm60 0h8v4h-8z\"/><path fill=\"#2C1A0A\" d=\"M217 205h4v6h-4zm-54 60h4v8h-4zm119 2h6v6h-6z\"/><g fill=\"#78E846\" font-size=\"8\"><text x=\"95\" y=\"230\">{}</text><text x=\"155\" y=\"230\">{}</text><text x=\"215\" y=\"230\">{}</text><text x=\"275\" y=\"230\">{}</text><text x=\"95\" y=\"300\">{}</text><text x=\"155\" y=\"300\">{}</text><text x=\"215\" y=\"300\">{}</text><text x=\"275\" y=\"300\">{}</text></g><g font-size=\"6\"><text x=\"126\" y=\"192\">01</text><text x=\"186\" y=\"192\">02</text><text x=\"246\" y=\"192\">03</text><text x=\"306\" y=\"192\">04</text><text x=\"126\" y=\"262\">05</text><text x=\"186\" y=\"262\">06</text><text x=\"246\" y=\"262\">07</text><text x=\"306\" y=\"262\">08</text></g><path fill=\"#2C1A0A\" stroke=\"#78E846\" d=\"M40 430h320v80H40z\"/><g fill=\"#78E846\" font-size=\"12\"><text x=\"50\" y=\"450\">ADVENTURER #{}</text><text x=\"50\" y=\"470\">LEVEL {} - {} XP</text></g></g><g id=\"page2\" transform=\"translate(400,0)\"><path d=\"M20 20h360v510H20z\" filter=\"url(#s)\"/><path d=\"M30 30h340v490H30z\"/><path fill=\"#E89446\" d=\"M20 20h360v2H20zm0 508h360v2H20zm0-506h2v506h-2zm358 0h2v506h-2z\"/><path fill=\"#E89446\" fill-rule=\"evenodd\" d=\"m50 52-1 2h-1v15h6v2l1 3h3c5 0 5 0 5-3v-2h6V54h-1l-1-2v-2H50v2Zm7 10v3h-4v-3l-1-3h5v3Zm8 0v3h-4v-6h4v3Zm-4 5v2h-4v-4h4v2Zm-13 5v20h8l7 1v-5H52V71h-2l-2 1Zm6 4v5l1 5h10v8h-8l-9 1v4h19v-2l1-2h1v-7l1-6h-11v-2h10v-5h-7l-8 1Z\" clip-rule=\"evenodd\"/><g fill=\"#E89446\" font-size=\"14\"><text x=\"120\" y=\"65\" font-size=\"12\">{}'S</text><text x=\"120\" y=\"85\" font-size=\"16\" style=\"font-family:&quot;MedievalSharp&quot;,&quot;Pixelify Sans&quot;,&quot;Courier New&quot;,&quot;Monaco&quot;,&quot;Lucida Console&quot;,monospace\">Item Bag</text></g><path d=\"M40 150h320v80H40z\" rx=\"5\" fill=\"#2C1A0A\" stroke=\"#E89446\"/><g fill=\"#E89446\" font-size=\"12\"><text x=\"50\" y=\"170\">INFORMATION ABOUT RUN GOES</text><text x=\"50\" y=\"190\">HERE AND HERE</text></g><g stroke=\"#663D17\"><path d=\"M40 250h55v55H40zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zM40 315h55v55H40zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zM40 380h55v55H40zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55z\" rx=\"5\" fill=\"none\"/></g><g fill=\"#E89446\"><circle cx=\"67\" cy=\"277\" r=\"8\" fill=\"none\" stroke=\"#E89446\" stroke-width=\"2\"/><path d=\"M63 265h8v6h-8z\"/><path d=\"M127 270h11v14h-11z\" fill=\"none\" stroke=\"#E89446\" stroke-width=\"1\"/><path d=\"M130 272h5M130 276h5M130 280h3\" stroke=\"#E89446\" stroke-width=\"1\"/><circle cx=\"197\" cy=\"277\" r=\"8\" fill=\"none\" stroke=\"#E89446\" stroke-width=\"2\"/><text x=\"197\" y=\"281\" font-size=\"8\" text-anchor=\"middle\">$</text></g><g fill=\"#E89446\" font-size=\"8\"><text x=\"67\" y=\"295\" text-anchor=\"middle\">{}</text><text x=\"67\" y=\"303\" text-anchor=\"middle\"></text><text x=\"132\" y=\"295\" text-anchor=\"middle\">{}</text><text x=\"132\" y=\"303\" text-anchor=\"middle\"></text><text x=\"197\" y=\"295\" text-anchor=\"middle\">{}</text><text x=\"197\" y=\"303\" text-anchor=\"middle\"></text><text x=\"262\" y=\"295\" text-anchor=\"middle\">EMPTY</text><text x=\"327\" y=\"295\" text-anchor=\"middle\">EMPTY</text></g><g font-size=\"6\" fill=\"#E89446\"><text x=\"47\" y=\"260\">01</text><text x=\"112\" y=\"260\">02</text><text x=\"177\" y=\"260\">03</text><text x=\"242\" y=\"260\">04</text><text x=\"307\" y=\"260\">05</text><text x=\"47\" y=\"325\">06</text><text x=\"112\" y=\"325\">07</text><text x=\"177\" y=\"325\">08</text><text x=\"242\" y=\"325\">09</text><text x=\"307\" y=\"325\">10</text><text x=\"47\" y=\"390\">11</text><text x=\"112\" y=\"390\">12</text><text x=\"177\" y=\"390\">13</text><text x=\"242\" y=\"390\">14</text><text x=\"307\" y=\"390\">15</text></g></g><g id=\"page3\" transform=\"translate(800,0)\"><path d=\"M20 20h360v510H20z\" filter=\"url(#s)\"/><path d=\"M30 30h340v490H30z\"/><path fill=\"#77EDFF\" d=\"M20 20h360v2H20zm0 508h360v2H20zm0-506h2v506h-2zm358 0h2v506h-2z\"/><path fill=\"#77EDFF\" fill-rule=\"evenodd\" d=\"m50 52-1 2h-1v15h6v2l1 3h3c5 0 5 0 5-3v-2h6V54h-1l-1-2v-2H50v2Zm7 10v3h-4v-3l-1-3h5v3Zm8 0v3h-4v-6h4v3Zm-4 5v2h-4v-4h4v2Zm-13 5v20h8l7 1v-5H52V71h-2l-2 1Zm6 4v5l1 5h10v8h-8l-9 1v4h19v-2l1-2h1v-7l1-6h-11v-2h10v-5h-7l-8 1Z\" clip-rule=\"evenodd\"/><g fill=\"#77EDFF\" font-size=\"14\"><text x=\"120\" y=\"65\" font-size=\"12\">{}'S</text><text x=\"120\" y=\"85\" font-size=\"16\" style=\"font-family:&quot;MedievalSharp&quot;,&quot;Pixelify Sans&quot;,&quot;Courier New&quot;,&quot;Monaco&quot;,&quot;Lucida Console&quot;,monospace\">Marketplace</text></g><g stroke=\"#77EDFF\" fill=\"none\"><path d=\"M40 100h55v55H40zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zM40 185h55v55H40zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zM40 270h55v55H40zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zM40 355h55v55H40zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55zm65 0h55v55h-55z\" rx=\"3\"/></g><g fill=\"#77EDFF\"><path d=\"M60 115h15v25H60z\"/><circle cx=\"132\" cy=\"127\" r=\"8\"/><path d=\"M125 135h14v8h-14z\"/><path d=\"M185 120h20v15h-20z\"/><circle cx=\"257\" cy=\"127\" r=\"8\"/><path d=\"M250 135h14v8h-14z\"/><path d=\"M315 120h20v15h-20z\"/><circle cx=\"67\" cy=\"212\" r=\"8\"/><path d=\"M120 200h25v20h-25z\"/><path d=\"M185 205h20v15h-20z\"/><circle cx=\"257\" cy=\"212\" r=\"8\"/><path d=\"M315 205h20v15h-20z\"/><circle cx=\"67\" cy=\"297\" r=\"8\"/><path d=\"M120 285h25v20h-25z\"/><path d=\"M185 290h20v15h-20z\"/><circle cx=\"257\" cy=\"297\" r=\"8\"/><path d=\"M315 290h20v15h-20z\"/><circle cx=\"67\" cy=\"382\" r=\"8\"/><path d=\"M120 370h25v20h-25z\"/><path d=\"M185 375h20v15h-20z\"/><circle cx=\"257\" cy=\"382\" r=\"8\"/><path d=\"M315 375h20v15h-20z\"/></g><g fill=\"#77EDFF\" font-size=\"8\"><text x=\"67\" y=\"170\" text-anchor=\"middle\">FIRE</text><text x=\"67\" y=\"178\" text-anchor=\"middle\">SCROLL</text><text x=\"132\" y=\"170\" text-anchor=\"middle\">HEALTH</text><text x=\"132\" y=\"178\" text-anchor=\"middle\">POTION</text><text x=\"197\" y=\"170\" text-anchor=\"middle\">WATER</text><text x=\"197\" y=\"178\" text-anchor=\"middle\">SCROLL</text><text x=\"262\" y=\"170\" text-anchor=\"middle\">MAGIC</text><text x=\"262\" y=\"178\" text-anchor=\"middle\">POTION</text><text x=\"327\" y=\"170\" text-anchor=\"middle\">FIRE</text><text x=\"327\" y=\"178\" text-anchor=\"middle\">SCROLL</text><text x=\"67\" y=\"255\" text-anchor=\"middle\">CHARISMA</text><text x=\"67\" y=\"263\" text-anchor=\"middle\">RING</text><text x=\"132\" y=\"255\" text-anchor=\"middle\">OCEAN</text><text x=\"132\" y=\"263\" text-anchor=\"middle\">NECKLACE</text><text x=\"197\" y=\"255\" text-anchor=\"middle\">THUNDER</text><text x=\"197\" y=\"263\" text-anchor=\"middle\">SCROLL</text><text x=\"262\" y=\"255\" text-anchor=\"middle\">MAGIC</text><text x=\"262\" y=\"263\" text-anchor=\"middle\">POTION</text><text x=\"327\" y=\"255\" text-anchor=\"middle\">THUNDER</text><text x=\"327\" y=\"263\" text-anchor=\"middle\">RING</text><text x=\"67\" y=\"340\" text-anchor=\"middle\">CHARISMA</text><text x=\"67\" y=\"348\" text-anchor=\"middle\">RING</text><text x=\"132\" y=\"340\" text-anchor=\"middle\">OCEAN</text><text x=\"132\" y=\"348\" text-anchor=\"middle\">NECKLACE</text><text x=\"197\" y=\"340\" text-anchor=\"middle\">THUNDER</text><text x=\"197\" y=\"348\" text-anchor=\"middle\">SCROLL</text><text x=\"262\" y=\"340\" text-anchor=\"middle\">MAGIC</text><text x=\"262\" y=\"348\" text-anchor=\"middle\">POTION</text><text x=\"327\" y=\"340\" text-anchor=\"middle\">THUNDER</text><text x=\"327\" y=\"348\" text-anchor=\"middle\">SCROLL</text><text x=\"67\" y=\"425\" text-anchor=\"middle\">CHARISMA</text><text x=\"67\" y=\"433\" text-anchor=\"middle\">RING</text><text x=\"132\" y=\"425\" text-anchor=\"middle\">OCEAN</text><text x=\"132\" y=\"433\" text-anchor=\"middle\">NECKLACE</text><text x=\"197\" y=\"425\" text-anchor=\"middle\">THUNDER</text><text x=\"197\" y=\"433\" text-anchor=\"middle\">SCROLL</text><text x=\"262\" y=\"425\" text-anchor=\"middle\">MAGIC</text><text x=\"262\" y=\"433\" text-anchor=\"middle\">POTION</text><text x=\"327\" y=\"425\" text-anchor=\"middle\">THUNDER</text><text x=\"327\" y=\"433\" text-anchor=\"middle\">SCROLL</text></g><g fill=\"#77EDFF\" font-size=\"6\"><text x=\"47\" y=\"110\">ITEM</text><text x=\"112\" y=\"110\">ITEM</text><text x=\"177\" y=\"110\">ITEM</text><text x=\"242\" y=\"110\">ITEM</text><text x=\"307\" y=\"110\">ITEM</text><text x=\"47\" y=\"195\">ITEM</text><text x=\"112\" y=\"195\">ITEM</text><text x=\"177\" y=\"195\">ITEM</text><text x=\"242\" y=\"195\">ITEM</text><text x=\"307\" y=\"195\">ITEM</text><text x=\"47\" y=\"280\">ITEM</text><text x=\"112\" y=\"280\">ITEM</text><text x=\"177\" y=\"280\">ITEM</text><text x=\"242\" y=\"280\">ITEM</text><text x=\"307\" y=\"280\">ITEM</text><text x=\"47\" y=\"365\">ITEM</text><text x=\"112\" y=\"365\">ITEM</text><text x=\"177\" y=\"365\">ITEM</text><text x=\"242\" y=\"365\">ITEM</text><text x=\"307\" y=\"365\">ITEM</text></g></g><g id=\"page4\" transform=\"translate(1200,0)\"><path d=\"M20 20h360v510H20z\" filter=\"url(#s)\"/><path d=\"M30 30h340v490H30z\" fill=\"#000000\"/><path fill=\"url(#battle_gradient)\" d=\"M20 20h360v2H20zm0 508h360v2H20zm0-506h2v506h-2zm358 0h2v506h-2z\"/><path fill=\"url(#battle_gradient)\" fill-rule=\"evenodd\" d=\"m50 52-1 2h-1v15h6v2l1 3h3c5 0 5 0 5-3v-2h6V54h-1l-1-2v-2H50v2Zm7 10v3h-4v-3l-1-3h5v3Zm8 0v3h-4v-6h4v3Zm-4 5v2h-4v-4h4v2Zm-13 5v20h8l7 1v-5H52V71h-2l-2 1Zm6 4v5l1 5h10v8h-8l-9 1v4h19v-2l1-2h1v-7l1-6h-11v-2h10v-5h-7l-8 1Z\" clip-rule=\"evenodd\"/><g fill=\"#FF6B6B\" font-size=\"14\"><text x=\"120\" y=\"65\" font-size=\"12\">{}'S</text><text x=\"120\" y=\"85\" font-size=\"16\" style=\"font-family:&quot;MedievalSharp&quot;,&quot;Pixelify Sans&quot;,&quot;Courier New&quot;,&quot;Monaco&quot;,&quot;Lucida Console&quot;,monospace\">Battle Arena</text></g><g fill=\"#FF6B6B\" font-size=\"12\"><text x=\"50\" y=\"120\">BATTLING:</text><text x=\"50\" y=\"140\" font-size=\"14\" style=\"font-family:&quot;MedievalSharp&quot;,&quot;Pixelify Sans&quot;,&quot;Courier New&quot;,&quot;Monaco&quot;,&quot;Lucida Console&quot;,monospace\">{}</text><text x=\"280\" y=\"140\" font-size=\"10\">LV {}</text></g><path d=\"M40 150h320v30H40z\" rx=\"5\" fill=\"#660000\" stroke=\"#FF6B6B\"/><g fill=\"#FF6B6B\" font-size=\"10\"><text x=\"50\" y=\"170\">BEAST HEALTH: {}/{}</text></g><path fill=\"#FF4444\" d=\"M50 175h260v8H50z\"/><path fill=\"#FF8888\" d=\"M50 175h200v8H50z\"/><path d=\"M40 200h140v120H40z\" rx=\"5\" fill=\"#330000\" stroke=\"#FF6B6B\"/><path d=\"M220 200h140v120H220z\" rx=\"5\" fill=\"#003300\" stroke=\"#78E846\"/><g fill=\"#FF6B6B\" font-size=\"12\"><text x=\"110\" y=\"220\" text-anchor=\"middle\">BEAST</text><text x=\"110\" y=\"240\" text-anchor=\"middle\">POWER</text><text x=\"110\" y=\"270\" font-size=\"16\" text-anchor=\"middle\">{}</text><text x=\"110\" y=\"290\" font-size=\"8\" text-anchor=\"middle\">ATTACK</text><text x=\"110\" y=\"305\" font-size=\"8\" text-anchor=\"middle\">POWER</text></g><g fill=\"#78E846\" font-size=\"12\"><text x=\"290\" y=\"220\" text-anchor=\"middle\">ADVENTURER</text><text x=\"290\" y=\"240\" text-anchor=\"middle\">POWER</text><text x=\"290\" y=\"270\" font-size=\"16\" text-anchor=\"middle\">{}</text><text x=\"290\" y=\"290\" font-size=\"8\" text-anchor=\"middle\">STRENGTH</text><text x=\"290\" y=\"305\" font-size=\"8\" text-anchor=\"middle\">BASED</text></g><path d=\"M40 340h320v60H40z\" rx=\"5\" fill=\"#220000\" stroke=\"#FF6B6B\"/><g fill=\"#FF6B6B\" font-size=\"10\"><text x=\"50\" y=\"360\">BATTLE LOG:</text><text x=\"50\" y=\"375\">Adventurer {} attacks {} for {} damage!</text><text x=\"50\" y=\"390\">Beast retaliates with ferocious strike!</text></g><path d=\"M40 420h320v60H40z\" rx=\"5\" fill=\"#002200\" stroke=\"#78E846\"/><g fill=\"#78E846\" font-size=\"10\"><text x=\"50\" y=\"440\">VICTORY CONDITIONS:</text><text x=\"50\" y=\"455\">- Defeat the beast to claim treasure</text><text x=\"50\" y=\"470\">- Use your equipment wisely</text></g></g><animateTransform attributeName=\"transform\" type=\"translate\" values=\"0,0; 0,0; -400,0; -400,0; -800,0; -800,0; -1200,0; -1200,0; 0,0\" keyTimes=\"0; 0.22; 0.28; 0.47; 0.53; 0.72; 0.78; 0.97; 1\" dur=\"40s\" calcMode=\"spline\" keySplines=\"0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1\" repeatCount=\"indefinite\"/></g></svg>",
+        _name, _level, _str, _dex, _int, _vit, _wis, _cha, _luck, _health, _max_health, _xp,
+        _weapon_name, _chest_name, _head_name, _waist_name, _foot_name, _hand_name, _neck_name, _ring_name,
+        adventurer_id, _level, _xp, _name, _bag_item_1, _bag_item_2, _bag_item_3, _name,
+        _beast_name, _beast_level, _beast_health, _beast_max_health, _beast_power, _str, _name, _beast_name, _damage, _beast_level
+    )
+}
+
+// @notice Generates the shinobi SVG template with dynamic substitution (original 3-page version)
 // @param adventurer_id The adventurer's ID
 // @param adventurer The adventurer
 // @param adventurer_name The adventurer's name
@@ -261,6 +324,86 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
     metadata += "{\"trait_type\":\"Hand Armor\",\"value\":\"" + _equiped_hand + "\"},";
     metadata += "{\"trait_type\":\"Necklace\",\"value\":\"" + _equiped_neck + "\"},";
     metadata += "{\"trait_type\":\"Ring\",\"value\":\"" + _equiped_ring + "\"}";
+    metadata += "]}";
+
+    format!("data:application/json;base64,{}", bytes_base64_encode(metadata))
+}
+
+// @notice Generates JSON metadata for the adventurer token uri using Shinobi template with battle interface
+// @param adventurer_id The adventurer's ID
+// @param adventurer The adventurer
+// @param adventurer_name The adventurer's name
+// @param bag The adventurer's bag
+// @param beast The beast being fought
+// @param beast_name The name of the beast
+// @return The generated JSON metadata with battle interface
+pub fn create_metadata_with_battle(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag, beast: Beast, beast_name: felt252) -> ByteArray {
+    let mut _name = Default::default();
+    _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
+
+    let _adventurer_id = format!("{}", adventurer_id);
+    let _xp = format!("{}", adventurer.xp);
+    let _level = format!("{}", (adventurer.xp / 100) + 1);
+    let _health = format!("{}", adventurer.health);
+    let _gold = format!("{}", adventurer.gold);
+    let _str = format!("{}", adventurer.stats.strength);
+    let _dex = format!("{}", adventurer.stats.dexterity);
+    let _int = format!("{}", adventurer.stats.intelligence);
+    let _vit = format!("{}", adventurer.stats.vitality);
+    let _wis = format!("{}", adventurer.stats.wisdom);
+    let _cha = format!("{}", adventurer.stats.charisma);
+    let _luck = format!("{}", adventurer.stats.luck);
+
+    // Generate equipped item names
+    let _equiped_weapon = generate_item(adventurer.equipment.weapon, false);
+    let _equiped_chest = generate_item(adventurer.equipment.chest, false);
+    let _equiped_head = generate_item(adventurer.equipment.head, false);
+    let _equiped_waist = generate_item(adventurer.equipment.waist, false);
+    let _equiped_foot = generate_item(adventurer.equipment.foot, false);  
+    let _equiped_hand = generate_item(adventurer.equipment.hand, false);
+    let _equiped_neck = generate_item(adventurer.equipment.neck, false);
+    let _equiped_ring = generate_item(adventurer.equipment.ring, false);
+
+    // Beast metadata
+    let mut _beast_name_str = Default::default();
+    _beast_name_str.append_word(beast_name, U256BytesUsedTraitImpl::bytes_used(beast_name.into()).into());
+    let _beast_level = format!("{}", beast.combat_spec.level);
+    let _beast_health = format!("{}", beast.starting_health);
+
+    // Generate the shinobi SVG with battle interface
+    let image = create_shinobi_svg_with_battle(adventurer_id, adventurer, adventurer_name, bag, beast, beast_name);
+
+    let base64_image = format!("data:image/svg+xml;base64,{}", bytes_base64_encode(image));
+
+    // Build JSON metadata string
+    let mut metadata: ByteArray = "{";
+    metadata += "\"name\":\"" + _name.clone() + " #" + _adventurer_id + "\",";
+    metadata += "\"description\":\"A legendary adventurer NFT with on-chain metadata rendered using the Shinobi template with battle interface.\",";
+    metadata += "\"image\":\"" + base64_image + "\",";
+    metadata += "\"attributes\":[";
+    metadata += "{\"trait_type\":\"Name\",\"value\":\"" + _name + "\"},";
+    metadata += "{\"trait_type\":\"XP\",\"value\":" + _xp + "},";
+    metadata += "{\"trait_type\":\"Level\",\"value\":" + _level + "},";
+    metadata += "{\"trait_type\":\"Health\",\"value\":" + _health + "},";
+    metadata += "{\"trait_type\":\"Gold\",\"value\":" + _gold + "},";
+    metadata += "{\"trait_type\":\"Strength\",\"value\":" + _str + "},";
+    metadata += "{\"trait_type\":\"Dexterity\",\"value\":" + _dex + "},";
+    metadata += "{\"trait_type\":\"Intelligence\",\"value\":" + _int + "},";
+    metadata += "{\"trait_type\":\"Vitality\",\"value\":" + _vit + "},";
+    metadata += "{\"trait_type\":\"Wisdom\",\"value\":" + _wis + "},";
+    metadata += "{\"trait_type\":\"Charisma\",\"value\":" + _cha + "},";
+    metadata += "{\"trait_type\":\"Luck\",\"value\":" + _luck + "},";
+    metadata += "{\"trait_type\":\"Weapon\",\"value\":\"" + _equiped_weapon + "\"},";
+    metadata += "{\"trait_type\":\"Chest Armor\",\"value\":\"" + _equiped_chest + "\"},";
+    metadata += "{\"trait_type\":\"Head Armor\",\"value\":\"" + _equiped_head + "\"},";
+    metadata += "{\"trait_type\":\"Waist Armor\",\"value\":\"" + _equiped_waist + "\"},";
+    metadata += "{\"trait_type\":\"Foot Armor\",\"value\":\"" + _equiped_foot + "\"},";
+    metadata += "{\"trait_type\":\"Hand Armor\",\"value\":\"" + _equiped_hand + "\"},";
+    metadata += "{\"trait_type\":\"Necklace\",\"value\":\"" + _equiped_neck + "\"},";
+    metadata += "{\"trait_type\":\"Ring\",\"value\":\"" + _equiped_ring + "\"},";
+    metadata += "{\"trait_type\":\"Battle Beast\",\"value\":\"" + _beast_name_str + "\"},";
+    metadata += "{\"trait_type\":\"Beast Level\",\"value\":" + _beast_level + "},";
+    metadata += "{\"trait_type\":\"Beast Health\",\"value\":" + _beast_health + "}";
     metadata += "]}";
 
     format!("data:application/json;base64,{}", bytes_base64_encode(metadata))

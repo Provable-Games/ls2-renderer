@@ -7,7 +7,7 @@ use ls2_renderer::mocks::mock_adventurer::{IMockAdventurerDispatcher, IMockAdven
 use core::array::ArrayTrait;
 use core::byte_array::ByteArrayTrait;
 
-fn deploy_contract(mock_adventurer_addr: ContractAddress) -> ContractAddress {
+fn deploy_contract(mock_adventurer_addr: ContractAddress, mock_beast_addr: ContractAddress) -> ContractAddress {
     let name: ByteArray = "Test NFT";
     let symbol: ByteArray = "TNFT";
     let base_uri: ByteArray = "https://example.com/";
@@ -18,16 +18,19 @@ fn deploy_contract(mock_adventurer_addr: ContractAddress) -> ContractAddress {
     symbol.serialize(ref calldata);
     base_uri.serialize(ref calldata);
     mock_adventurer_addr.serialize(ref calldata);
+    mock_beast_addr.serialize(ref calldata);
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     contract_address
 }
 
 #[test]
 fn test_deployment() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     
     assert(metadata_dispatcher.name() == "Test NFT", 'Wrong name');
@@ -36,10 +39,12 @@ fn test_deployment() {
 
 #[test]
 fn test_mint() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
@@ -61,10 +66,12 @@ fn test_mint() {
 
 #[test]
 fn test_token_uri_with_renderer() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
@@ -82,10 +89,12 @@ fn test_token_uri_with_renderer() {
 
 #[test]
 fn test_token_uri_different_ids() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
@@ -99,10 +108,12 @@ fn test_token_uri_different_ids() {
 #[test]
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_token_uri_nonexistent_token() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     
     // Try to get URI for a token that doesn't exist
@@ -111,10 +122,12 @@ fn test_token_uri_nonexistent_token() {
 
 #[test]
 fn test_multiple_mints_different_recipients() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
     
@@ -141,10 +154,12 @@ fn test_multiple_mints_different_recipients() {
 
 #[test]
 fn test_transfer_functionality() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
     
@@ -166,12 +181,14 @@ fn test_transfer_functionality() {
 
 #[test]
 fn test_mock_adventurer_deterministic() {
-    // Deploy the mock_adventurer contract
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    // Deploy the mock contracts
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = array![];
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
-    let dispatcher = IMockAdventurerDispatcher { contract_address: mock_addr };
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
+    let dispatcher = IMockAdventurerDispatcher { contract_address: mock_adv_addr };
 
     // Test with a specific adventurer_id
     let adventurer_id: u64 = 42;
@@ -231,10 +248,12 @@ fn test_mock_adventurer_deterministic() {
 
 #[test]
 fn test_sample_token_uri() {
-    let mock_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
+    let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = ArrayTrait::<felt252>::new();
-    let (mock_addr, _) = mock_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_addr);
+    let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
+    let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
+    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
@@ -249,6 +268,6 @@ fn test_sample_token_uri() {
     assert(ByteArrayTrait::len(@uri) > 0, 'empty uri');
     assert(ByteArrayTrait::len(@uri) > 50, 'uri too short');
     
-    // Print the sample token URI for demonstration
-    println!("Sample Token URI for token #1: {}", uri);
+    // Print the sample token URI for demonstration (now shows 4-page battle format)
+    println!("Sample 4-page Battle Token URI for token #1: {}", uri);
 }

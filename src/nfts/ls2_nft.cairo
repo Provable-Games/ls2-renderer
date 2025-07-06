@@ -41,6 +41,7 @@ pub mod ls2_nft {
         pub src5: SRC5Component::Storage,
         pub token_counter: u256,
         pub mock_adventurer_address: ContractAddress,
+        pub mock_beast_address: ContractAddress,
     }
 
     #[event]
@@ -63,9 +64,11 @@ pub mod ls2_nft {
         symbol: ByteArray,
         base_uri: ByteArray,
         mock_adventurer_address: ContractAddress,
+        mock_beast_address: ContractAddress,
     ) {
         self.erc721.initializer(name, symbol, base_uri);
         self.mock_adventurer_address.write(mock_adventurer_address);
+        self.mock_beast_address.write(mock_beast_address);
     }
 
     #[abi(embed_v0)]
@@ -89,6 +92,14 @@ pub mod ls2_nft {
         self.mock_adventurer_address.write(addr);
     }
 
+    /// Set the mock beast contract address (admin only)
+    /// For testing purposes only
+    #[external(v0)]
+    fn set_mock_beast_address(ref self: ContractState, addr: ContractAddress) {
+        // TODO: add onlyOwner or admin check
+        self.mock_beast_address.write(addr);
+    }
+
     #[abi(embed_v0)]
     impl ERC721Metadata of IERC721Metadata<ContractState> {
         /// Returns the NFT name.
@@ -109,8 +120,9 @@ pub mod ls2_nft {
         /// - `token_id` exists.
         fn token_uri(self: @ContractState, token_id: u256) -> ByteArray {
             self.erc721._require_owned(token_id);
-            let mock_addr = self.mock_adventurer_address.read();
-            Renderer::render(token_id, mock_addr)
+            let mock_adv_addr = self.mock_adventurer_address.read();
+            let mock_beast_addr = self.mock_beast_address.read();
+            Renderer::render_with_battle(token_id, mock_adv_addr, mock_beast_addr)
         }
     }
 }
