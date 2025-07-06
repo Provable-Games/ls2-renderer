@@ -160,7 +160,7 @@ fn generate_logo() -> ByteArray {
 // @param beast The beast being fought
 // @param beast_name The name of the beast
 // @return The generated shinobi SVG with dynamic values including battle page
-fn create_shinobi_svg_with_battle(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag, beast: Beast, beast_name: felt252) -> ByteArray {
+fn create_battle_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag, beast: Beast, beast_name: felt252) -> ByteArray {
     let mut _name = Default::default();
     _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
 
@@ -260,74 +260,6 @@ fn create_shinobi_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_nam
     )
 }
 
-// @notice Generates JSON metadata for the adventurer token uri using Shinobi template
-// @param adventurer_id The adventurer's ID
-// @param adventurer The adventurer
-// @param adventurer_name The adventurer's name
-// @param bag The adventurer's bag
-// @return The generated JSON metadata
-pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
-    let mut _name = Default::default();
-    _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
-
-    let _adventurer_id = format!("{}", adventurer_id);
-    let _xp = format!("{}", adventurer.xp);
-    let _level = format!("{}", (adventurer.xp / 100) + 1);
-    let _health = format!("{}", adventurer.health);
-    let _gold = format!("{}", adventurer.gold);
-    let _str = format!("{}", adventurer.stats.strength);
-    let _dex = format!("{}", adventurer.stats.dexterity);
-    let _int = format!("{}", adventurer.stats.intelligence);
-    let _vit = format!("{}", adventurer.stats.vitality);
-    let _wis = format!("{}", adventurer.stats.wisdom);
-    let _cha = format!("{}", adventurer.stats.charisma);
-    let _luck = format!("{}", adventurer.stats.luck);
-
-    // Generate equipped item names
-    let _equiped_weapon = generate_item(adventurer.equipment.weapon, false);
-    let _equiped_chest = generate_item(adventurer.equipment.chest, false);
-    let _equiped_head = generate_item(adventurer.equipment.head, false);
-    let _equiped_waist = generate_item(adventurer.equipment.waist, false);
-    let _equiped_foot = generate_item(adventurer.equipment.foot, false);  
-    let _equiped_hand = generate_item(adventurer.equipment.hand, false);
-    let _equiped_neck = generate_item(adventurer.equipment.neck, false);
-    let _equiped_ring = generate_item(adventurer.equipment.ring, false);
-
-    // Generate the shinobi SVG with dynamic data
-    let image = create_shinobi_svg(adventurer_id, adventurer, adventurer_name, bag);
-
-    let base64_image = format!("data:image/svg+xml;base64,{}", bytes_base64_encode(image));
-
-    // Build JSON metadata string
-    let mut metadata: ByteArray = "{";
-    metadata += "\"name\":\"" + _name.clone() + " #" + _adventurer_id + "\",";
-    metadata += "\"description\":\"A legendary adventurer NFT with on-chain metadata rendered using the Shinobi template.\",";
-    metadata += "\"image\":\"" + base64_image + "\",";
-    metadata += "\"attributes\":[";
-    metadata += "{\"trait_type\":\"Name\",\"value\":\"" + _name + "\"},";
-    metadata += "{\"trait_type\":\"XP\",\"value\":" + _xp + "},";
-    metadata += "{\"trait_type\":\"Level\",\"value\":" + _level + "},";
-    metadata += "{\"trait_type\":\"Health\",\"value\":" + _health + "},";
-    metadata += "{\"trait_type\":\"Gold\",\"value\":" + _gold + "},";
-    metadata += "{\"trait_type\":\"Strength\",\"value\":" + _str + "},";
-    metadata += "{\"trait_type\":\"Dexterity\",\"value\":" + _dex + "},";
-    metadata += "{\"trait_type\":\"Intelligence\",\"value\":" + _int + "},";
-    metadata += "{\"trait_type\":\"Vitality\",\"value\":" + _vit + "},";
-    metadata += "{\"trait_type\":\"Wisdom\",\"value\":" + _wis + "},";
-    metadata += "{\"trait_type\":\"Charisma\",\"value\":" + _cha + "},";
-    metadata += "{\"trait_type\":\"Luck\",\"value\":" + _luck + "},";
-    metadata += "{\"trait_type\":\"Weapon\",\"value\":\"" + _equiped_weapon + "\"},";
-    metadata += "{\"trait_type\":\"Chest Armor\",\"value\":\"" + _equiped_chest + "\"},";
-    metadata += "{\"trait_type\":\"Head Armor\",\"value\":\"" + _equiped_head + "\"},";
-    metadata += "{\"trait_type\":\"Waist Armor\",\"value\":\"" + _equiped_waist + "\"},";
-    metadata += "{\"trait_type\":\"Foot Armor\",\"value\":\"" + _equiped_foot + "\"},";
-    metadata += "{\"trait_type\":\"Hand Armor\",\"value\":\"" + _equiped_hand + "\"},";
-    metadata += "{\"trait_type\":\"Necklace\",\"value\":\"" + _equiped_neck + "\"},";
-    metadata += "{\"trait_type\":\"Ring\",\"value\":\"" + _equiped_ring + "\"}";
-    metadata += "]}";
-
-    format!("data:application/json;base64,{}", bytes_base64_encode(metadata))
-}
 
 // @notice Generates JSON metadata for the adventurer token uri using Shinobi template with battle interface
 // @param adventurer_id The adventurer's ID
@@ -337,7 +269,7 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
 // @param beast The beast being fought
 // @param beast_name The name of the beast
 // @return The generated JSON metadata with battle interface
-pub fn create_metadata_with_battle(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag, beast: Beast, beast_name: felt252) -> ByteArray {
+pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag, beast: Beast, beast_name: felt252) -> ByteArray {
     let mut _name = Default::default();
     _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
 
@@ -371,7 +303,7 @@ pub fn create_metadata_with_battle(adventurer_id: u64, adventurer: Adventurer, a
     let _beast_health = format!("{}", beast.starting_health);
 
     // Generate the shinobi SVG with battle interface
-    let image = create_shinobi_svg_with_battle(adventurer_id, adventurer, adventurer_name, bag, beast, beast_name);
+    let image = create_battle_svg(adventurer_id, adventurer, adventurer_name, bag, beast, beast_name);
 
     let base64_image = format!("data:image/svg+xml;base64,{}", bytes_base64_encode(image));
 
@@ -413,6 +345,7 @@ pub fn create_metadata_with_battle(adventurer_id: u64, adventurer: Adventurer, a
 #[cfg(test)]
 mod tests {
     use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Equipment, Stats, Item};
+    use ls2_renderer::mocks::mock_beast::{Beast, CombatSpec, Tier, Type, SpecialPowers};
     use super::create_metadata;
 
     #[test]
@@ -459,7 +392,22 @@ mod tests {
             mutated: false,
         };
 
-        let _current_1 = create_metadata(1000000, _adventurer, 'testadventurer', _bag);
+        let _beast = Beast {
+            id: 7,
+            starting_health: 25,
+            combat_spec: CombatSpec {
+                tier: Tier::T2,
+                item_type: Type::Blade_or_Hide,
+                level: 5,
+                specials: SpecialPowers {
+                    special1: 1,
+                    special2: 2,
+                    special3: 3,
+                },
+            },
+        };
+
+        let _current_1 = create_metadata(1000000, _adventurer, 'testadventurer', _bag, _beast, 'testbeast');
 
         // Test passes if no panic occurs
         assert!(true);

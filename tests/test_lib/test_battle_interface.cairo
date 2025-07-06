@@ -100,7 +100,7 @@ fn test_renderer_with_dynamic_names() {
     
     // Test that renderer now uses dynamic names in 4-page battle format
     let token_id: u256 = 7; // Should get 'Merlin'
-    let result = Renderer::render_with_battle(token_id, mock_adv_addr, mock_beast_addr);
+    let result = Renderer::render(token_id, mock_adv_addr, mock_beast_addr);
     
     assert(ByteArrayTrait::len(@result) > 0, 'empty result');
     
@@ -131,7 +131,7 @@ fn test_level_calculation() {
 }
 
 #[test]
-fn test_render_with_battle_interface() {
+fn test_render_battle_interface() {
     let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
     let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
     let calldata = array![];
@@ -139,9 +139,9 @@ fn test_render_with_battle_interface() {
     let (adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
     let (beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
     
-    // Test the new render_with_battle function
+    // Test the render function with battle interface
     let token_id: u256 = 42;
-    let result = Renderer::render_with_battle(token_id, adv_addr, beast_addr);
+    let result = Renderer::render(token_id, adv_addr, beast_addr);
     
     assert(ByteArrayTrait::len(@result) > 0, 'empty result');
     

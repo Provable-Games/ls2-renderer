@@ -122,7 +122,7 @@ pub mod ls2_nft {
             self.erc721._require_owned(token_id);
             let mock_adv_addr = self.mock_adventurer_address.read();
             let mock_beast_addr = self.mock_beast_address.read();
-            Renderer::render_with_battle(token_id, mock_adv_addr, mock_beast_addr)
+            Renderer::render(token_id, mock_adv_addr, mock_beast_addr)
         }
     }
 }
