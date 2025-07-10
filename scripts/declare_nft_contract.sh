@@ -36,19 +36,37 @@ fi
 
 echo -e "${GREEN}✅ Build successful${NC}"
 
+# Set network from environment variable or default to sepolia
+STARKNET_NETWORK="${STARKNET_NETWORK:-sepolia}"
+
 # Declare ls2_nft contract
 echo -e "${YELLOW}🎨 Declaring ls2_nft contract...${NC}"
-NFT_RESULT=$(sncast --account renderer declare --contract-name ls2_nft 2>&1)
+NFT_RESULT=$(sncast --account renderer declare --network "$STARKNET_NETWORK" --contract-name ls2_nft 2>&1)
+NFT_EXIT_CODE=$?
 
-if [ $? -eq 0 ]; then
+if [ $NFT_EXIT_CODE -eq 0 ] && echo "$NFT_RESULT" | grep -q "class_hash:"; then
+    # New declaration - extract from success output
     NFT_CLASS_HASH=$(echo "$NFT_RESULT" | grep "class_hash:" | cut -d' ' -f2)
     NFT_TX_HASH=$(echo "$NFT_RESULT" | grep "transaction_hash:" | cut -d' ' -f2)
     
     echo -e "${GREEN}✅ ls2_nft declared successfully${NC}"
     echo -e "   Class Hash: ${NFT_CLASS_HASH}"
     echo -e "   Transaction Hash: ${NFT_TX_HASH}"
+elif echo "$NFT_RESULT" | grep -q "is already declared"; then
+    # Contract already declared - extract class hash from error message
+    echo -e "${YELLOW}⚠️ ls2_nft contract is already declared${NC}"
+    NFT_CLASS_HASH=$(echo "$NFT_RESULT" | grep -o "0x[a-fA-F0-9]\{64\}" | head -1)
+    if [ -z "$NFT_CLASS_HASH" ]; then
+        echo -e "${RED}❌ Failed to extract class hash from already declared contract${NC}"
+        echo -e "${RED}Raw output: $NFT_RESULT${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Using existing class hash: ${NFT_CLASS_HASH}${NC}"
+    NFT_TX_HASH="already_declared"
 else
     echo -e "${RED}❌ Failed to declare ls2_nft${NC}"
+    echo -e "${RED}Exit code: $NFT_EXIT_CODE${NC}"
+    echo -e "${RED}Raw output:${NC}"
     echo "$NFT_RESULT"
     exit 1
 fi
