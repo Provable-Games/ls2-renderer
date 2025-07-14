@@ -98,6 +98,40 @@ fn create_item_element(x: ByteArray, y: ByteArray, item: ByteArray) -> ByteArray
     "<g transform='translate(" + x + "," + y + ") scale(1.5)'>" + item + "</g>"
 }
 
+// @notice Calculates the health bar width based on health percentage
+// @param current_health The current health value
+// @param max_health The maximum health value
+// @return The calculated width for the health bar (0-160)
+fn calculate_health_bar_width(current_health: u16, max_health: u16) -> u16 {
+    if max_health == 0 {
+        return 0;
+    }
+    
+    // Calculate percentage and scale to 160 pixels (max width)
+    let width = (current_health.into() * 160_u32) / max_health.into();
+    width.try_into().unwrap_or(0)
+}
+
+// @notice Determines the health bar color based on health percentage
+// @param current_health The current health value
+// @param max_health The maximum health value
+// @return The hex color code for the health bar
+fn get_health_bar_color(current_health: u16, max_health: u16) -> ByteArray {
+    if max_health == 0 {
+        return "#78E846"; // Default green
+    }
+    
+    let percentage = (current_health.into() * 100_u32) / max_health.into();
+    
+    if percentage > 60 {
+        "#78E846" // Green (healthy)
+    } else if percentage > 30 {
+        "#FFC107" // Yellow/Orange (wounded)
+    } else {
+        "#FF4444" // Red (critical)
+    }
+}
+
 // @notice Combines elements into a single string
 // @param elements The elements to combine
 // @return The combined elements
@@ -179,6 +213,12 @@ fn create_battle_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name
     let _max_health = format!("{}", 100); // Using 100 as max health for display
     let _xp = format!("{}", adventurer.xp);
     let _gold = format!("{}", adventurer.gold);
+    
+    // Calculate dynamic health bar properties
+    let health_bar_width = calculate_health_bar_width(adventurer.health, 100);
+    let health_bar_color = get_health_bar_color(adventurer.health, 100);
+    let _health_bar_width = format!("{}", health_bar_width);
+    let _health_bar_color = health_bar_color;
     
     // Beast stats for battle interface
     let _beast_level = format!("{}", beast.combat_spec.level);
