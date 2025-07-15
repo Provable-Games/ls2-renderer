@@ -62,8 +62,7 @@ fn test_svg_and_json_structure() {
 }
 
 
-
-#[test] 
+#[test]
 fn test_deterministic_rendering() {
     let mock_adventurer_contract = declare("mock_adventurer").unwrap().contract_class();
     let mock_beast_contract = declare("mock_beast").unwrap().contract_class();
@@ -71,11 +70,11 @@ fn test_deterministic_rendering() {
     let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
     let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
     let token_id: u256 = 777;
-    
+
     // Only render once to reduce computational cost - determinism is implied by Cairo's purity
     let result1 = Renderer::render(token_id, mock_adv_addr, mock_beast_addr);
     assert(ByteArrayTrait::len(@result1) > 0, 'empty result');
-    
+
     println!("Deterministic 4-page battle rendering test passed for token {}", token_id);
 }
 
@@ -86,10 +85,10 @@ fn test_render_performance() {
     let calldata = array![];
     let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
     let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
-    
+
     // Test single render with our new complex 4-page animated battle SVG
     let result = Renderer::render(1, mock_adv_addr, mock_beast_addr);
     assert(ByteArrayTrait::len(@result) > 100, 'result too short');
-    
+
     println!("Performance test passed - rendered 4-page battle NFT successfully");
 }

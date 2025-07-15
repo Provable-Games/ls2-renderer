@@ -98,14 +98,38 @@ pub mod mock_adventurer {
                     luck: ((adventurer_id / 64) % 10_u64).try_into().unwrap() + 1_u8,
                 },
                 equipment: Equipment {
-                    weapon: Item { id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap() },
-                    chest: Item { id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap() },
-                    head: Item { id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap() },
-                    waist: Item { id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap() },
-                    foot: Item { id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap() },
-                    hand: Item { id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap() },
-                    neck: Item { id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap() },
-                    ring: Item { id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap() },
+                    weapon: Item {
+                        id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap(),
+                    },
+                    chest: Item {
+                        id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap(),
+                    },
+                    head: Item {
+                        id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap(),
+                    },
+                    waist: Item {
+                        id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap(),
+                    },
+                    foot: Item {
+                        id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap(),
+                    },
+                    hand: Item {
+                        id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap(),
+                    },
+                    neck: Item {
+                        id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap(),
+                    },
+                    ring: Item {
+                        id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(),
+                        xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap(),
+                    },
                 },
                 item_specials_seed: ((adventurer_id * 3_u64) % 65536_u64).try_into().unwrap(),
                 action_count: ((adventurer_id * 11_u64) % 100_u64).try_into().unwrap(),
@@ -113,21 +137,66 @@ pub mod mock_adventurer {
         }
         fn get_bag(self: @ContractState, adventurer_id: u64) -> Bag {
             Bag {
-                item_1: Item { id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap() },
-                item_2: Item { id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap() },
-                item_3: Item { id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap() },
-                item_4: Item { id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap() },
-                item_5: Item { id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap() },
-                item_6: Item { id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap() },
-                item_7: Item { id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap() },
-                item_8: Item { id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap() },
-                item_9: Item { id: ((adventurer_id + 9) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 10) % 100_u64).try_into().unwrap() },
-                item_10: Item { id: ((adventurer_id + 10) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 11) % 100_u64).try_into().unwrap() },
-                item_11: Item { id: ((adventurer_id + 11) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 12) % 100_u64).try_into().unwrap() },
-                item_12: Item { id: ((adventurer_id + 12) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 13) % 100_u64).try_into().unwrap() },
-                item_13: Item { id: ((adventurer_id + 13) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 14) % 100_u64).try_into().unwrap() },
-                item_14: Item { id: ((adventurer_id + 14) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 15) % 100_u64).try_into().unwrap() },
-                item_15: Item { id: ((adventurer_id + 15) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 16) % 100_u64).try_into().unwrap() },
+                item_1: Item {
+                    id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap(),
+                },
+                item_2: Item {
+                    id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap(),
+                },
+                item_3: Item {
+                    id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap(),
+                },
+                item_4: Item {
+                    id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap(),
+                },
+                item_5: Item {
+                    id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap(),
+                },
+                item_6: Item {
+                    id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap(),
+                },
+                item_7: Item {
+                    id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap(),
+                },
+                item_8: Item {
+                    id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap(),
+                },
+                item_9: Item {
+                    id: ((adventurer_id + 9) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 10) % 100_u64).try_into().unwrap(),
+                },
+                item_10: Item {
+                    id: ((adventurer_id + 10) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 11) % 100_u64).try_into().unwrap(),
+                },
+                item_11: Item {
+                    id: ((adventurer_id + 11) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 12) % 100_u64).try_into().unwrap(),
+                },
+                item_12: Item {
+                    id: ((adventurer_id + 12) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 13) % 100_u64).try_into().unwrap(),
+                },
+                item_13: Item {
+                    id: ((adventurer_id + 13) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 14) % 100_u64).try_into().unwrap(),
+                },
+                item_14: Item {
+                    id: ((adventurer_id + 14) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 15) % 100_u64).try_into().unwrap(),
+                },
+                item_15: Item {
+                    id: ((adventurer_id + 15) % 100_u64).try_into().unwrap(),
+                    xp: ((adventurer_id * 16) % 100_u64).try_into().unwrap(),
+                },
                 mutated: (adventurer_id % 2_u64) == 1_u64,
             }
         }
@@ -161,7 +230,11 @@ pub mod mock_adventurer {
         fn get_level(self: @ContractState, xp: u16) -> u8 {
             // Simple level calculation: every 100 XP = 1 level, minimum level 1
             let level = (xp / 100) + 1;
-            if level > 255 { 255_u8 } else { level.try_into().unwrap() }
+            if level > 255 {
+                255_u8
+            } else {
+                level.try_into().unwrap()
+            }
         }
     }
-} 
+}
