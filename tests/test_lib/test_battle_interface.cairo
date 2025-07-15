@@ -44,7 +44,7 @@ fn test_battle_interface_data() {
     let level = adv_dispatcher.get_level(adventurer.xp);
     
     // Test beast data for battle interface  
-    let beast = beast_dispatcher.get_beast(7); // Troll
+    let beast = beast_dispatcher.get_beast(7); // Kitsune
     let beast_name = beast_dispatcher.get_beast_name(7);
     
     // Verify battle interface requirements from page_4.png analysis
@@ -54,7 +54,7 @@ fn test_battle_interface_data() {
     assert(level > 0, 'level should be positive');
     assert(beast.starting_health > 0, 'beast health should be positive');
     assert(beast.combat_spec.level > 0, 'beast level should be positive');
-    assert(beast_name == 'Troll', 'beast 7 should be Troll');
+    assert(beast_name == 'Kitsune', 'beast 7 should be Kitsune');
     
     println!("Adventurer: {} (Level {})", adventurer_name, level);
     println!("Health: {}/{}", adventurer.health, 150); // Max health example
