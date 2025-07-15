@@ -724,7 +724,7 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
 #[cfg(test)]
 mod tests {
     use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Equipment, Stats, Item};
-    use ls2_renderer::mocks::mock_beast::{Beast, CombatSpec, Tier, Type, SpecialPowers};
+    use ls2_renderer::mocks::mock_beast::{Beast, CombatSpec, Tier, Type, SpecialPowers, Category};
     use super::create_metadata;
 
     #[test]
@@ -784,6 +784,7 @@ mod tests {
                     special3: 3,
                 },
             },
+            category: Category::Magical,
         };
 
         let _current_1 = create_metadata(1000000, _adventurer, 'testadventurer', _bag, _beast, 'testbeast');
