@@ -2,6 +2,35 @@ use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Item};
 use ls2_renderer::mocks::mock_beast::{Beast};
 use ls2_renderer::utils::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 
+// SVG Component System
+#[derive(Drop)]
+pub struct SVGTheme {
+    pub primary_color: ByteArray,
+    pub secondary_color: ByteArray,
+    pub background_color: ByteArray,
+    pub border_color: ByteArray,
+    pub text_color: ByteArray,
+}
+
+#[derive(Copy, Drop)]
+pub struct SVGPosition {
+    pub x: u32,
+    pub y: u32,
+}
+
+#[derive(Copy, Drop)]
+pub struct SVGSize {
+    pub width: u32,
+    pub height: u32,
+}
+
+#[derive(Drop)]
+pub struct SVGComponent {
+    pub position: SVGPosition,
+    pub size: SVGSize,
+    pub theme: SVGTheme,
+}
+
 // @notice Generates the LS logo svg
 // @return The generated LS logo
 fn logo() -> ByteArray {
@@ -62,40 +91,260 @@ fn ring() -> ByteArray {
     "<path d=\"M13 3V2h-1V1h-2v1h1v3h-1v2H9v1H8v1H7v1H6v1H4v1H1v-1H0v2h1v1h1v1h4v-1h2v-1h1v-1h1v-1h1v-1h1V9h1V7h1V3h-1ZM3 9h1V8h1V7h1V6h1V5h1V4h2V2H9V1H8v1H6v1H5v1H4v1H3v1H2v1H1v2H0v1h1v1h2V9Z\"/>"
 }
 
-// @notice Generates a rect element
-// @return The generated rect element
-fn create_rect() -> ByteArray {
-    "<rect x='0.5' y='0.5' width='599' height='899' rx='27.5' fill='black' stroke='#3DEC00'/>"
+// Theme constants
+pub fn get_default_theme() -> SVGTheme {
+    SVGTheme {
+        primary_color: "#78E846",
+        secondary_color: "#2C1A0A",
+        background_color: "#000000",
+        border_color: "#3DEC00",
+        text_color: "#78E846",
+    }
 }
 
-// @notice Generates a text element
-// @param text The text to generate a string for
-// @param x The x coordinate of the text
-// @param y The y coordinate of the text
-// @param fontsize The font size of the text
-// @param baseline The baseline of the text
-// @param text_anchor The text anchor of the text
-// @return The generated text element
-fn create_text(
-    text: ByteArray, x: ByteArray, y: ByteArray, fontsize: ByteArray, baseline: ByteArray, text_anchor: ByteArray,
+pub fn get_bag_theme() -> SVGTheme {
+    SVGTheme {
+        primary_color: "#E89446",
+        secondary_color: "#2C1A0A",
+        background_color: "#000000",
+        border_color: "#E89446",
+        text_color: "#E89446",
+    }
+}
+
+pub fn get_marketplace_theme() -> SVGTheme {
+    SVGTheme {
+        primary_color: "#77EDFF",
+        secondary_color: "#2C1A0A",
+        background_color: "#000000",
+        border_color: "#77EDFF",
+        text_color: "#77EDFF",
+    }
+}
+
+pub fn get_battle_theme() -> SVGTheme {
+    SVGTheme {
+        primary_color: "#FE9676",
+        secondary_color: "#2C1A0A",
+        background_color: "#000000",
+        border_color: "#FE9676",
+        text_color: "#FE9676",
+    }
+}
+
+// Component builders
+fn create_rect_component(position: SVGPosition, size: SVGSize, theme: @SVGTheme, rx: u32) -> ByteArray {
+    format!(
+        "<rect x='{}' y='{}' width='{}' height='{}' rx='{}' fill='{}' stroke='{}'/>",
+        position.x, position.y, size.width, size.height, rx, theme.background_color, theme.border_color
+    )
+}
+
+fn create_page_border(size: SVGSize, theme: @SVGTheme) -> ByteArray {
+    let border_width = 2;
+    format!(
+        "<path fill='{}' d='M20 20h{}v{}H20zm0 {}h{}v{}H20zm0-{}h{}v{}h-{}zm{} 0h{}v{}h-{}z'/>",
+        theme.border_color, size.width - 40, border_width, size.height - 22, size.width - 40, border_width,
+        size.height - 22, border_width, size.height - 22, border_width, size.width - 22, border_width, size.height - 22, border_width
+    )
+}
+
+pub fn create_text_component(
+    text: ByteArray, position: SVGPosition, fontsize: u32, theme: @SVGTheme, 
+    text_anchor: ByteArray, baseline: ByteArray
 ) -> ByteArray {
-    "<text x='"
-        + x
-        + "' y='"
-        + y
-        + "' font-size='"
-        + fontsize
-        + "' text-anchor='"
-        + text_anchor
-        + "' dominant-baseline='"
-        + baseline
-        + "'>"
-        + text
-        + "</text>"
+    format!(
+        "<text x='{}' y='{}' font-size='{}' text-anchor='{}' dominant-baseline='{}' fill='{}'>{}</text>",
+        position.x, position.y, fontsize, text_anchor, baseline, theme.text_color, text
+    )
 }
 
-fn create_item_element(x: ByteArray, y: ByteArray, item: ByteArray) -> ByteArray {
-    "<g transform='translate(" + x + "," + y + ") scale(1.5)'>" + item + "</g>"
+pub fn create_stat_component(label: ByteArray, value: ByteArray, position: SVGPosition, theme: @SVGTheme) -> ByteArray {
+    let label_element = create_text_component(label, position, 14, theme, "start", "text-top");
+    let value_position = SVGPosition { x: position.x, y: position.y + 20 };
+    let value_element = create_text_component(value, value_position, 20, theme, "start", "text-top");
+    label_element + value_element
+}
+
+pub fn create_health_bar_component(current: u32, max: u32, position: SVGPosition, size: SVGSize, theme: @SVGTheme) -> ByteArray {
+    let health_percent = (current * size.width) / max;
+    let bg_rect = format!(
+        "<rect x='{}' y='{}' width='{}' height='{}' fill='{}' stroke='{}'/>",
+        position.x, position.y, size.width, size.height, theme.secondary_color, theme.border_color
+    );
+    let health_fill = format!(
+        "<rect x='{}' y='{}' width='{}' height='{}' fill='{}'/>",
+        position.x + 1, position.y + 1, health_percent - 2, size.height - 2, theme.primary_color
+    );
+    bg_rect + health_fill
+}
+
+pub fn create_inventory_slot_component(slot_id: u32, item_name: ByteArray, position: SVGPosition, theme: @SVGTheme) -> ByteArray {
+    let slot_size = SVGSize { width: 40, height: 40 };
+    let slot_rect = format!(
+        "<rect x='{}' y='{}' width='{}' height='{}' fill='{}' stroke='{}'/>",
+        position.x, position.y, slot_size.width, slot_size.height, theme.secondary_color, theme.border_color
+    );
+    let item_icon = get_item_icon_by_name(item_name.clone());
+    let icon_element = if item_icon.len() > 0 {
+        format!(
+            "<g transform='translate({},{}) scale(1.5)' fill='{}'>{}</g>",
+            position.x + 5, position.y + 5, theme.primary_color, item_icon
+        )
+    } else {
+        ""
+    };
+    let text_position = SVGPosition { x: position.x + 20, y: position.y + 55 };
+    let text_element = create_text_component(item_name, text_position, 8, theme, "middle", "text-top");
+    let slot_number = create_text_component(format!("{}", slot_id), SVGPosition { x: position.x + 36, y: position.y + 12 }, 6, theme, "end", "text-top");
+    
+    slot_rect + icon_element + text_element + slot_number
+}
+
+fn get_item_icon_by_name(item_name: ByteArray) -> ByteArray {
+    if item_name.len() == 0 || item_name == "Empty" || item_name == "None Equipped" {
+        return "";
+    }
+    // Simple pattern matching for item types - using contains-like logic
+    let item_lower = item_name.clone(); // In real implementation, would convert to lowercase
+    if item_lower.len() > 0 {
+        // For now, just return appropriate icons based on simple logic
+        // This is a simplified version - in practice you'd implement proper string matching
+        weapon()
+    } else {
+        ""
+    }
+}
+
+pub fn create_logo_component(position: SVGPosition, scale: u32, theme: @SVGTheme) -> ByteArray {
+    format!(
+        "<g transform='translate({},{}) scale({})' fill='{}'>{}</g>",
+        position.x, position.y, scale, theme.primary_color, logo()
+    )
+}
+
+pub fn create_page_header_component(title: ByteArray, subtitle: ByteArray, position: SVGPosition, theme: @SVGTheme) -> ByteArray {
+    let logo_element = create_logo_component(SVGPosition { x: position.x, y: position.y }, 4, theme);
+    let title_position = SVGPosition { x: position.x + 100, y: position.y + 45 };
+    let title_element = create_text_component(title, title_position, 16, theme, "start", "text-top");
+    let subtitle_position = SVGPosition { x: position.x + 230, y: position.y + 45 };
+    let subtitle_element = create_text_component(subtitle, subtitle_position, 12, theme, "start", "text-top");
+    
+    logo_element + title_element + subtitle_element
+}
+
+pub fn create_xp_badge_component(xp: ByteArray, position: SVGPosition) -> ByteArray {
+    let badge_size = SVGSize { width: 50, height: 25 };
+    let badge_rect = format!(
+        "<rect x='{}' y='{}' width='{}' height='{}' fill='#E8A746' rx='4'/>",
+        position.x, position.y, badge_size.width, badge_size.height
+    );
+    let xp_text = format!(
+        "<text x='{}' y='{}' font-size='14' text-anchor='middle' fill='#2C1A0A'>{}</text>",
+        position.x + 25, position.y + 17, xp
+    );
+    let xp_label = format!(
+        "<text x='{}' y='{}' font-size='10' text-anchor='start' fill='#E8A746'>XP</text>",
+        position.x + 5, position.y - 5
+    );
+    
+    badge_rect + xp_text + xp_label
+}
+
+// Layout components
+fn create_stats_layout(adventurer: Adventurer, position: SVGPosition, theme: @SVGTheme) -> ByteArray {
+    let mut stats_elements: ByteArray = "";
+    let spacing = 50;
+    
+    // STR
+    stats_elements += create_stat_component("STR", format!("{}", adventurer.stats.strength), position, theme);
+    
+    // DEX
+    let dex_pos = SVGPosition { x: position.x, y: position.y + spacing };
+    stats_elements += create_stat_component("DEX", format!("{}", adventurer.stats.dexterity), dex_pos, theme);
+    
+    // INT
+    let int_pos = SVGPosition { x: position.x, y: position.y + spacing * 2 };
+    stats_elements += create_stat_component("INT", format!("{}", adventurer.stats.intelligence), int_pos, theme);
+    
+    // VIT
+    let vit_pos = SVGPosition { x: position.x, y: position.y + spacing * 3 };
+    stats_elements += create_stat_component("VIT", format!("{}", adventurer.stats.vitality), vit_pos, theme);
+    
+    // WIS
+    let wis_pos = SVGPosition { x: position.x, y: position.y + spacing * 4 };
+    stats_elements += create_stat_component("WIS", format!("{}", adventurer.stats.wisdom), wis_pos, theme);
+    
+    // CHA
+    let cha_pos = SVGPosition { x: position.x, y: position.y + spacing * 5 };
+    stats_elements += create_stat_component("CHA", format!("{}", adventurer.stats.charisma), cha_pos, theme);
+    
+    // LUCK
+    let luck_pos = SVGPosition { x: position.x, y: position.y + spacing * 6 };
+    stats_elements += create_stat_component("LUCK", format!("{}", adventurer.stats.luck), luck_pos, theme);
+    
+    stats_elements
+}
+
+fn create_inventory_layout(adventurer: Adventurer, position: SVGPosition, theme: @SVGTheme) -> ByteArray {
+    let mut inventory_elements: ByteArray = "";
+    let _slot_size = 50;
+    
+    // Inventory title
+    let title_pos = SVGPosition { x: position.x, y: position.y - 20 };
+    inventory_elements += create_text_component("INVENTORY", title_pos, 12, theme, "start", "text-top");
+    
+    // Top row equipment slots
+    let weapon_pos = SVGPosition { x: position.x, y: position.y };
+    inventory_elements += create_inventory_slot_component(1, generate_item(adventurer.equipment.weapon, false), weapon_pos, theme);
+    
+    let chest_pos = SVGPosition { x: position.x + 60, y: position.y };
+    inventory_elements += create_inventory_slot_component(2, generate_item(adventurer.equipment.chest, false), chest_pos, theme);
+    
+    let head_pos = SVGPosition { x: position.x + 120, y: position.y };
+    inventory_elements += create_inventory_slot_component(3, generate_item(adventurer.equipment.head, false), head_pos, theme);
+    
+    let waist_pos = SVGPosition { x: position.x + 180, y: position.y };
+    inventory_elements += create_inventory_slot_component(4, generate_item(adventurer.equipment.waist, false), waist_pos, theme);
+    
+    // Bottom row equipment slots
+    let foot_pos = SVGPosition { x: position.x, y: position.y + 70 };
+    inventory_elements += create_inventory_slot_component(5, generate_item(adventurer.equipment.foot, false), foot_pos, theme);
+    
+    let hand_pos = SVGPosition { x: position.x + 60, y: position.y + 70 };
+    inventory_elements += create_inventory_slot_component(6, generate_item(adventurer.equipment.hand, false), hand_pos, theme);
+    
+    let neck_pos = SVGPosition { x: position.x + 120, y: position.y + 70 };
+    inventory_elements += create_inventory_slot_component(7, generate_item(adventurer.equipment.neck, false), neck_pos, theme);
+    
+    let ring_pos = SVGPosition { x: position.x + 180, y: position.y + 70 };
+    inventory_elements += create_inventory_slot_component(8, generate_item(adventurer.equipment.ring, false), ring_pos, theme);
+    
+    inventory_elements
+}
+
+fn create_bag_layout(bag: Bag, position: SVGPosition, theme: @SVGTheme) -> ByteArray {
+    let mut bag_elements: ByteArray = "";
+    let _slot_size = 55;
+    
+    // Create bag slots manually for now - first 3 items, rest empty
+    let slot1_pos = SVGPosition { x: position.x, y: position.y };
+    bag_elements += create_inventory_slot_component(1, generate_item(bag.item_1, true), slot1_pos, theme);
+    
+    let slot2_pos = SVGPosition { x: position.x + 65, y: position.y };
+    bag_elements += create_inventory_slot_component(2, generate_item(bag.item_2, true), slot2_pos, theme);
+    
+    let slot3_pos = SVGPosition { x: position.x + 130, y: position.y };
+    bag_elements += create_inventory_slot_component(3, generate_item(bag.item_3, true), slot3_pos, theme);
+    
+    // Add a few empty slots for demonstration
+    let slot4_pos = SVGPosition { x: position.x + 195, y: position.y };
+    bag_elements += create_inventory_slot_component(4, "Empty", slot4_pos, theme);
+    
+    let slot5_pos = SVGPosition { x: position.x + 260, y: position.y };
+    bag_elements += create_inventory_slot_component(5, "Empty", slot5_pos, theme);
+    
+    bag_elements
 }
 
 // @notice Combines elements into a single string
@@ -117,6 +366,129 @@ fn combine_elements(ref elements: Span<ByteArray>) -> ByteArray {
     };
 
     combined
+}
+
+// SVG page creators using modular components
+fn create_modular_adventurer_page(adventurer: Adventurer, adventurer_name: ByteArray, adventurer_id: u64) -> ByteArray {
+    let theme = get_default_theme();
+    let page_size = SVGSize { width: 360, height: 510 };
+    let page_position = SVGPosition { x: 20, y: 20 };
+    
+    let mut page_elements: ByteArray = "";
+    
+    // Page background and border
+    page_elements += format!("<path d='M{} {}h{}v{}H{}z' filter='url(#s)'/>", page_position.x, page_position.y, page_size.width, page_size.height, page_position.x);
+    page_elements += format!("<path d='M{} {}h{}v{}H{}z'/>", page_position.x + 10, page_position.y + 10, page_size.width - 20, page_size.height - 20, page_position.x + 10);
+    page_elements += create_page_border(page_size, @theme);
+    
+    // Page header with logo and title
+    let header_position = SVGPosition { x: page_position.x + 30, y: page_position.y + 30 };
+    let level = format!("LEVEL {}", (adventurer.xp / 100) + 1);
+    page_elements += create_page_header_component(adventurer_name, level, header_position, @theme);
+    
+    // XP badge
+    let xp_position = SVGPosition { x: 320, y: 55 };
+    page_elements += create_xp_badge_component(format!("{}", adventurer.xp), xp_position);
+    
+    // Stats layout
+    let stats_position = SVGPosition { x: 40, y: 100 };
+    page_elements += create_stats_layout(adventurer, stats_position, @theme);
+    
+    // Health bar
+    let health_position = SVGPosition { x: 90, y: 115 };
+    let health_size = SVGSize { width: 200, height: 8 };
+    page_elements += create_health_bar_component(adventurer.health.into(), 100, health_position, health_size, @theme);
+    
+    // Health text
+    let health_text_pos = SVGPosition { x: 90, y: 135 };
+    page_elements += create_text_component(format!("{}/100 HP", adventurer.health), health_text_pos, 12, @theme, "start", "text-top");
+    
+    // Inventory layout
+    let inventory_position = SVGPosition { x: 90, y: 180 };
+    page_elements += create_inventory_layout(adventurer, inventory_position, @theme);
+    
+    // Bottom info
+    let info_position = SVGPosition { x: 40, y: 430 };
+    page_elements += format!(
+        "<rect x='{}' y='{}' width='320' height='80' fill='{}' stroke='{}'/>",
+        info_position.x, info_position.y, theme.secondary_color, theme.border_color
+    );
+    
+    let adventurer_text_pos = SVGPosition { x: 50, y: 450 };
+    page_elements += create_text_component(format!("ADVENTURER #{}", adventurer_id), adventurer_text_pos, 12, @theme, "start", "text-top");
+    
+    let level_text_pos = SVGPosition { x: 50, y: 470 };
+    page_elements += create_text_component(format!("LEVEL {} - {} XP", (adventurer.xp / 100) + 1, adventurer.xp), level_text_pos, 12, @theme, "start", "text-top");
+    
+    page_elements
+}
+
+fn create_modular_bag_page(adventurer_name: ByteArray, bag: Bag) -> ByteArray {
+    let theme = get_bag_theme();
+    let page_size = SVGSize { width: 360, height: 510 };
+    let page_position = SVGPosition { x: 20, y: 20 };
+    
+    let mut page_elements: ByteArray = "";
+    
+    // Page background and border
+    page_elements += format!("<path d='M{} {}h{}v{}H{}z' filter='url(#s)' transform='translate(400)'/>", page_position.x, page_position.y, page_size.width, page_size.height, page_position.x);
+    page_elements += format!("<path d='M{} {}h{}v{}H{}z'/>", page_position.x + 410, page_position.y + 10, page_size.width - 20, page_size.height - 20, page_position.x + 410);
+    page_elements += create_page_border(page_size, @theme);
+    
+    // Page header
+    let header_position = SVGPosition { x: 520, y: 65 };
+    page_elements += create_text_component(format!("{}S", adventurer_name), header_position, 12, @theme, "start", "text-top");
+    
+    let title_position = SVGPosition { x: 520, y: 85 };
+    page_elements += create_text_component("Item Bag", title_position, 16, @theme, "start", "text-top");
+    
+    // Info section
+    let info_position = SVGPosition { x: 440, y: 150 };
+    page_elements += format!(
+        "<rect x='{}' y='{}' width='320' height='80' fill='{}' stroke='{}'/>",
+        info_position.x, info_position.y, theme.secondary_color, theme.border_color
+    );
+    
+    let info_text_pos = SVGPosition { x: 450, y: 170 };
+    page_elements += create_text_component("INFORMATION ABOUT RUN GOES", info_text_pos, 12, @theme, "start", "text-top");
+    
+    let info_text_pos2 = SVGPosition { x: 450, y: 190 };
+    page_elements += create_text_component("HERE AND HERE", info_text_pos2, 12, @theme, "start", "text-top");
+    
+    // Bag layout
+    let bag_position = SVGPosition { x: 440, y: 250 };
+    page_elements += create_bag_layout(bag, bag_position, @theme);
+    
+    page_elements
+}
+
+fn create_modular_svg_with_components(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
+    let mut _name = Default::default();
+    _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
+    
+    let svg_defs: ByteArray = "<defs><filter id='s'><feDropShadow dx='0' dy='10' flood-opacity='.3' stdDeviation='10'/></filter><style>@import url(https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&amp;family=MedievalSharp&amp;display=swap);text{font-family:\"Pixelify Sans\",\"Courier New\",\"Monaco\",\"Lucida Console\",monospace;font-weight:700;text-rendering:optimizeSpeed;shape-rendering:crispEdges}</style></defs>";
+    
+    let slide_container_start: ByteArray = "<g id='slideContainer'>";
+    
+    // Page 1: Adventurer stats
+    let page1_start: ByteArray = "<g id='page1'>";
+    let page1_content = create_modular_adventurer_page(adventurer, _name.clone(), adventurer_id);
+    let page1_end: ByteArray = "</g>";
+    
+    // Page 2: Bag
+    let page2_start: ByteArray = "<g id='page2' transform='translate(400,0)'>";
+    let page2_content = create_modular_bag_page(_name.clone(), bag);
+    let page2_end: ByteArray = "</g>";
+    
+    // Animation
+    let animation: ByteArray = "<animateTransform attributeName='transform' type='translate' values='0,0; 0,0; -400,0; -400,0; 0,0' keyTimes='0; 0.4; 0.5; 0.9; 1' dur='20s' calcMode='spline' keySplines='0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1' repeatCount='indefinite'/>";
+    
+    let _slide_container_end: ByteArray = "</g>";
+    
+    format!(
+        "<svg xmlns='http://www.w3.org/2000/svg' width='400' height='550' viewBox='0 0 400 550'>{}{}{}{}{}{}{}{}{}</svg>",
+        svg_defs, slide_container_start, page1_start, page1_content, page1_end, page2_start, page2_content, page2_end, animation
+    )
 }
 
 // @notice Generates an SVG string for adventurer token uri
@@ -215,13 +587,19 @@ fn create_battle_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name
     )
 }
 
-// @notice Generates the shinobi SVG template with dynamic substitution (original 3-page version)
+// @notice Generates the shinobi SVG template with dynamic substitution (modular component version)
 // @param adventurer_id The adventurer's ID
 // @param adventurer The adventurer
 // @param adventurer_name The adventurer's name
 // @param bag The adventurer's bag
-// @return The generated shinobi SVG with dynamic values
+// @return The generated shinobi SVG with dynamic values using modular components
 fn create_shinobi_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
+    // Use the new modular component system
+    create_modular_svg_with_components(adventurer_id, adventurer, adventurer_name, bag)
+}
+
+// Legacy function kept for backward compatibility
+fn create_shinobi_svg_legacy(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
     let mut _name = Default::default();
     _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
 
