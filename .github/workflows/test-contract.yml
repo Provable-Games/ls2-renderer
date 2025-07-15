@@ -6,14 +6,9 @@ env:
 
 on:
   pull_request:
-    paths:
-      - "ls2-renderer/**"
-      - ".github/workflows/test-ls2-renderer.yml"
   push:
     branches:
       - main
-    paths:
-      - "ls2-renderer/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -43,11 +38,9 @@ jobs:
         with:
           starknet-foundry-version: ${{ env.SNFORGE_VERSION }}
       - name: Run Scarb Build
-        run: |
-          cd ls2-renderer && scarb build
+        run: scarb build
       - name: Run Tests
-        run: |
-          cd ls2-renderer && snforge test
+        run: scarb test
 
   scarb-fmt:
     needs: [setup-environment]
@@ -57,7 +50,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cd ls2-renderer && scarb fmt --check
+      - run: scarb fmt --check
 
   scarb-check:
     needs: [setup-environment]
@@ -67,4 +60,4 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cd ls2-renderer && scarb check
+      - run: scarb check
