@@ -1,13 +1,20 @@
 use starknet::{ContractAddress, contract_address_const};
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address};
-use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait, IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait};
+use openzeppelin_token::erc721::interface::{
+    IERC721Dispatcher, IERC721DispatcherTrait, IERC721MetadataDispatcher,
+    IERC721MetadataDispatcherTrait,
+};
 use ls2_renderer::nfts::ls2_nft::{IOpenMintDispatcher, IOpenMintDispatcherTrait};
 use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Item, Equipment, Stats};
-use ls2_renderer::mocks::mock_adventurer::{IMockAdventurerDispatcher, IMockAdventurerDispatcherTrait};
+use ls2_renderer::mocks::mock_adventurer::{
+    IMockAdventurerDispatcher, IMockAdventurerDispatcherTrait,
+};
 use core::array::ArrayTrait;
 use core::byte_array::ByteArrayTrait;
 
-fn deploy_contract(mock_adventurer_addr: ContractAddress, mock_beast_addr: ContractAddress) -> ContractAddress {
+fn deploy_contract(
+    mock_adventurer_addr: ContractAddress, mock_beast_addr: ContractAddress,
+) -> ContractAddress {
     let name: ByteArray = "Test NFT";
     let symbol: ByteArray = "TNFT";
     let base_uri: ByteArray = "https://example.com/";
@@ -32,7 +39,7 @@ fn test_deployment() {
     let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
     let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
-    
+
     assert(metadata_dispatcher.name() == "Test NFT", 'Wrong name');
     assert(metadata_dispatcher.symbol() == "TNFT", 'Wrong symbol');
 }
@@ -48,17 +55,17 @@ fn test_mint() {
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
-    
+
     // Mint a token
     mint_dispatcher.mint(recipient);
-    
+
     // Check that the token was minted with ID 1
     assert(erc721_dispatcher.owner_of(1) == recipient, 'Wrong owner');
     assert(erc721_dispatcher.balance_of(recipient) == 1, 'Wrong balance');
-    
+
     // Mint another token
     mint_dispatcher.mint(recipient);
-    
+
     // Check that the token was minted with ID 2
     assert(erc721_dispatcher.owner_of(2) == recipient, 'Wrong owner');
     assert(erc721_dispatcher.balance_of(recipient) == 2, 'Wrong balance after 2nd mint');
@@ -75,13 +82,13 @@ fn test_token_uri_with_renderer() {
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
-    
+
     // Mint a token
     mint_dispatcher.mint(recipient);
-    
+
     // Get the token URI (which uses the renderer)
     let uri = metadata_dispatcher.token_uri(1);
-    
+
     // Verify the JSON structure returned by the renderer
     assert(ByteArrayTrait::len(@uri) > 0, 'empty');
     assert(ByteArrayTrait::len(@uri) > 50, 'short');
@@ -115,7 +122,7 @@ fn test_token_uri_nonexistent_token() {
     let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
     let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
-    
+
     // Try to get URI for a token that doesn't exist
     metadata_dispatcher.token_uri(999);
 }
@@ -130,23 +137,23 @@ fn test_multiple_mints_different_recipients() {
     let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
-    
+
     let recipient1 = contract_address_const::<0x123>();
     let recipient2 = contract_address_const::<0x456>();
     let recipient3 = contract_address_const::<0x789>();
-    
+
     // Mint tokens to different recipients
     mint_dispatcher.mint(recipient1);
     mint_dispatcher.mint(recipient2);
     mint_dispatcher.mint(recipient3);
     mint_dispatcher.mint(recipient1); // Second token for recipient1
-    
+
     // Verify ownership and balances
     assert(erc721_dispatcher.owner_of(1) == recipient1, 'Wrong owner of token 1');
     assert(erc721_dispatcher.owner_of(2) == recipient2, 'Wrong owner of token 2');
     assert(erc721_dispatcher.owner_of(3) == recipient3, 'Wrong owner of token 3');
     assert(erc721_dispatcher.owner_of(4) == recipient1, 'Wrong owner of token 4');
-    
+
     assert(erc721_dispatcher.balance_of(recipient1) == 2, 'Wrong balance for recipient1');
     assert(erc721_dispatcher.balance_of(recipient2) == 1, 'Wrong balance for recipient2');
     assert(erc721_dispatcher.balance_of(recipient3) == 1, 'Wrong balance for recipient3');
@@ -162,17 +169,17 @@ fn test_transfer_functionality() {
     let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let erc721_dispatcher = IERC721Dispatcher { contract_address };
-    
+
     let owner = contract_address_const::<0x123>();
     let recipient = contract_address_const::<0x456>();
-    
+
     // Mint a token
     mint_dispatcher.mint(owner);
-    
+
     // Transfer the token
     start_cheat_caller_address(contract_address, owner);
     erc721_dispatcher.transfer_from(owner, recipient, 1);
-    
+
     // Verify the transfer
     assert(erc721_dispatcher.owner_of(1) == recipient, 'Transfer failed');
     assert(erc721_dispatcher.balance_of(owner) == 0, 'Wrong owner balance');
@@ -209,14 +216,38 @@ fn test_mock_adventurer_deterministic() {
             luck: ((adventurer_id / 64) % 10_u64).try_into().unwrap() + 1_u8,
         },
         equipment: Equipment {
-            weapon: Item { id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap() },
-            chest: Item { id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap() },
-            head: Item { id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap() },
-            waist: Item { id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap() },
-            foot: Item { id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap() },
-            hand: Item { id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap() },
-            neck: Item { id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap() },
-            ring: Item { id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap() },
+            weapon: Item {
+                id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap(),
+            },
+            chest: Item {
+                id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap(),
+            },
+            head: Item {
+                id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap(),
+            },
+            waist: Item {
+                id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap(),
+            },
+            foot: Item {
+                id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap(),
+            },
+            hand: Item {
+                id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap(),
+            },
+            neck: Item {
+                id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap(),
+            },
+            ring: Item {
+                id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(),
+                xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap(),
+            },
         },
         item_specials_seed: ((adventurer_id * 3_u64) % 65536_u64).try_into().unwrap(),
         action_count: ((adventurer_id * 11_u64) % 100_u64).try_into().unwrap(),
@@ -226,21 +257,66 @@ fn test_mock_adventurer_deterministic() {
     // Test get_bag
     let bag = dispatcher.get_bag(adventurer_id);
     let expected_bag = Bag {
-        item_1: Item { id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap() },
-        item_2: Item { id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap() },
-        item_3: Item { id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap() },
-        item_4: Item { id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap() },
-        item_5: Item { id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap() },
-        item_6: Item { id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap() },
-        item_7: Item { id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap() },
-        item_8: Item { id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap() },
-        item_9: Item { id: ((adventurer_id + 9) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 10) % 100_u64).try_into().unwrap() },
-        item_10: Item { id: ((adventurer_id + 10) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 11) % 100_u64).try_into().unwrap() },
-        item_11: Item { id: ((adventurer_id + 11) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 12) % 100_u64).try_into().unwrap() },
-        item_12: Item { id: ((adventurer_id + 12) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 13) % 100_u64).try_into().unwrap() },
-        item_13: Item { id: ((adventurer_id + 13) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 14) % 100_u64).try_into().unwrap() },
-        item_14: Item { id: ((adventurer_id + 14) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 15) % 100_u64).try_into().unwrap() },
-        item_15: Item { id: ((adventurer_id + 15) % 100_u64).try_into().unwrap(), xp: ((adventurer_id * 16) % 100_u64).try_into().unwrap() },
+        item_1: Item {
+            id: ((adventurer_id + 1) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 2) % 100_u64).try_into().unwrap(),
+        },
+        item_2: Item {
+            id: ((adventurer_id + 2) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 3) % 100_u64).try_into().unwrap(),
+        },
+        item_3: Item {
+            id: ((adventurer_id + 3) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 4) % 100_u64).try_into().unwrap(),
+        },
+        item_4: Item {
+            id: ((adventurer_id + 4) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 5) % 100_u64).try_into().unwrap(),
+        },
+        item_5: Item {
+            id: ((adventurer_id + 5) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 6) % 100_u64).try_into().unwrap(),
+        },
+        item_6: Item {
+            id: ((adventurer_id + 6) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 7) % 100_u64).try_into().unwrap(),
+        },
+        item_7: Item {
+            id: ((adventurer_id + 7) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 8) % 100_u64).try_into().unwrap(),
+        },
+        item_8: Item {
+            id: ((adventurer_id + 8) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 9) % 100_u64).try_into().unwrap(),
+        },
+        item_9: Item {
+            id: ((adventurer_id + 9) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 10) % 100_u64).try_into().unwrap(),
+        },
+        item_10: Item {
+            id: ((adventurer_id + 10) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 11) % 100_u64).try_into().unwrap(),
+        },
+        item_11: Item {
+            id: ((adventurer_id + 11) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 12) % 100_u64).try_into().unwrap(),
+        },
+        item_12: Item {
+            id: ((adventurer_id + 12) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 13) % 100_u64).try_into().unwrap(),
+        },
+        item_13: Item {
+            id: ((adventurer_id + 13) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 14) % 100_u64).try_into().unwrap(),
+        },
+        item_14: Item {
+            id: ((adventurer_id + 14) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 15) % 100_u64).try_into().unwrap(),
+        },
+        item_15: Item {
+            id: ((adventurer_id + 15) % 100_u64).try_into().unwrap(),
+            xp: ((adventurer_id * 16) % 100_u64).try_into().unwrap(),
+        },
         mutated: (adventurer_id % 2_u64) == 1_u64,
     };
     assert_eq!(bag, expected_bag);
@@ -257,17 +333,17 @@ fn test_sample_token_uri() {
     let mint_dispatcher = IOpenMintDispatcher { contract_address };
     let metadata_dispatcher = IERC721MetadataDispatcher { contract_address };
     let recipient = contract_address_const::<0x123>();
-    
+
     // Mint a token
     mint_dispatcher.mint(recipient);
-    
+
     // Get the token URI and print it as a sample
     let uri = metadata_dispatcher.token_uri(1);
-    
+
     // Basic assertions
     assert(ByteArrayTrait::len(@uri) > 0, 'empty uri');
     assert(ByteArrayTrait::len(@uri) > 50, 'uri too short');
-    
+
     // Print the sample token URI for demonstration (now shows 4-page battle format)
     println!("Sample 4-page Battle Token URI for token #1: {}", uri);
 }
