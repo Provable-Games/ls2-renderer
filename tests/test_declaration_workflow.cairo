@@ -80,7 +80,6 @@ mod test_declaration_workflow {
         let nft_address = deploy_nft_contract(mock_adventurer_address, mock_beast_address);
         
         // Test ERC721 functionality
-        let erc721_dispatcher = IERC721Dispatcher { contract_address: nft_address };
         let metadata_dispatcher = IERC721MetadataDispatcher { contract_address: nft_address };
         
         // Test metadata

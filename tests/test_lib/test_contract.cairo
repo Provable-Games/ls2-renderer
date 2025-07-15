@@ -187,7 +187,7 @@ fn test_mock_adventurer_deterministic() {
     let calldata = array![];
     let (mock_adv_addr, _) = mock_adventurer_contract.deploy(@calldata).unwrap();
     let (mock_beast_addr, _) = mock_beast_contract.deploy(@calldata).unwrap();
-    let contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
+    let _contract_address = deploy_contract(mock_adv_addr, mock_beast_addr);
     let dispatcher = IMockAdventurerDispatcher { contract_address: mock_adv_addr };
 
     // Test with a specific adventurer_id

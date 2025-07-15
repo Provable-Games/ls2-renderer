@@ -1,5 +1,5 @@
 use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Item};
-use ls2_renderer::mocks::mock_beast::{Beast, Category};
+use ls2_renderer::mocks::mock_beast::{Beast};
 use ls2_renderer::utils::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 
 // SVG Component System
