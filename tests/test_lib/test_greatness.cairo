@@ -34,5 +34,14 @@ fn test_greatness_system() {
     let name4 = generate_item(item4, false);
     println!("Item 4 (XP=400, G=20): {}", name4);
     
+    // Test 5: Different item types
+    let item5 = Item { id: 1, xp: 361 }; // Pendant with 361 XP
+    let name5 = generate_item(item5, false);
+    println!("Item 5 (Pendant, XP=361, G=19): {}", name5);
+    
+    let item6 = Item { id: 22, xp: 400 }; // Crown with 400 XP
+    let name6 = generate_item(item6, false);
+    println!("Item 6 (Crown, XP=400, G=20): {}", name6);
+    
     println!("All greatness tests passed!");
 }

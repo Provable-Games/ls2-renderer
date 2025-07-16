@@ -68,7 +68,17 @@ pub fn calculate_greatness(xp: u16) -> u8 {
 // @notice Get prefix string from prefix ID (1-69)
 // @param prefix_id The prefix ID (1-69)
 // @return The prefix string
-pub fn get_prefix_string(prefix_id: u8) -> felt252 {
+pub fn get_prefix_string(prefix_id: u8) -> ByteArray {
+    let prefix_felt = get_prefix_felt(prefix_id);
+    let mut prefix_ba = Default::default();
+    prefix_ba.append_word(prefix_felt, U256BytesUsedTraitImpl::bytes_used(prefix_felt.into()).into());
+    prefix_ba
+}
+
+// @notice Get prefix felt252 from prefix ID (1-69)
+// @param prefix_id The prefix ID (1-69)
+// @return The prefix felt252
+fn get_prefix_felt(prefix_id: u8) -> felt252 {
     if prefix_id == 1 { 'Agony' }
     else if prefix_id == 2 { 'Apocalypse' }
     else if prefix_id == 3 { 'Armageddon' }
@@ -144,7 +154,17 @@ pub fn get_prefix_string(prefix_id: u8) -> felt252 {
 // @notice Get suffix string from suffix ID (1-18)
 // @param suffix_id The suffix ID (1-18)
 // @return The suffix string
-pub fn get_suffix_string(suffix_id: u8) -> felt252 {
+pub fn get_suffix_string(suffix_id: u8) -> ByteArray {
+    let suffix_felt = get_suffix_felt(suffix_id);
+    let mut suffix_ba = Default::default();
+    suffix_ba.append_word(suffix_felt, U256BytesUsedTraitImpl::bytes_used(suffix_felt.into()).into());
+    suffix_ba
+}
+
+// @notice Get suffix felt252 from suffix ID (1-18)
+// @param suffix_id The suffix ID (1-18)
+// @return The suffix felt252
+fn get_suffix_felt(suffix_id: u8) -> felt252 {
     if suffix_id == 1 { 'Bane' }
     else if suffix_id == 2 { 'Root' }
     else if suffix_id == 3 { 'Bite' }
@@ -915,7 +935,9 @@ pub fn generate_item(item: Item, bag: bool) -> ByteArray {
     let greatness = calculate_greatness(item.xp);
     
     // Get base item name from database
-    let base_name = ItemDatabaseImpl::get_item_name(item.id);
+    let base_name_felt = ItemDatabaseImpl::get_item_name(item.id);
+    let mut base_name = Default::default();
+    base_name.append_word(base_name_felt, U256BytesUsedTraitImpl::bytes_used(base_name_felt.into()).into());
     
     // Build the full item name with prefix and suffix
     let mut full_name = "";
