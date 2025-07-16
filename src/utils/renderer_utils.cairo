@@ -1,11 +1,18 @@
 use ls2_renderer::mocks::mock_adventurer::{Adventurer, Bag, Item};
 use ls2_renderer::mocks::mock_beast::{Beast};
 use ls2_renderer::utils::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
+use ls2_renderer::utils::item_database::ItemDatabaseImpl;
 
 // Health calculation constants
 const STARTING_HEALTH: u8 = 100;
 const HEALTH_INCREASE_PER_VITALITY: u8 = 20;
 const MAX_ADVENTURER_HEALTH: u16 = 1023;
+
+// Item greatness constants
+const SUFFIX_UNLOCK_GREATNESS: u8 = 15;
+const PREFIXES_UNLOCK_GREATNESS: u8 = 19;
+const NAME_PREFIX_LENGTH: u8 = 69;
+const NAME_SUFFIX_LENGTH: u8 = 18;
 
 // @notice Calculate maximum health based on vitality
 // @param vitality The vitality stat of the adventurer
@@ -19,6 +26,164 @@ fn get_max_health(vitality: u8) -> u16 {
     } else {
         new_max_health
     }
+}
+
+// @notice Calculate square root using Newton's method
+// @param value The value to calculate square root for
+// @return The square root of the value
+fn sqrt(value: u16) -> u8 {
+    if value == 0 {
+        return 0;
+    }
+    if value == 1 {
+        return 1;
+    }
+    
+    let mut x = value / 2;
+    let mut prev_x = 0;
+    
+    // Newton's method: x = (x + value/x) / 2
+    loop {
+        prev_x = x;
+        x = (x + value / x) / 2;
+        
+        if x >= prev_x {
+            break prev_x.try_into().unwrap();
+        }
+    }
+}
+
+// @notice Calculate item greatness from XP
+// @param xp The item's XP value
+// @return The calculated greatness (0-20)
+pub fn calculate_greatness(xp: u16) -> u8 {
+    let greatness = sqrt(xp);
+    if greatness > 20 {
+        20
+    } else {
+        greatness
+    }
+}
+
+// @notice Get prefix string from prefix ID (1-69)
+// @param prefix_id The prefix ID (1-69)
+// @return The prefix string
+pub fn get_prefix_string(prefix_id: u8) -> felt252 {
+    if prefix_id == 1 { 'Agony' }
+    else if prefix_id == 2 { 'Apocalypse' }
+    else if prefix_id == 3 { 'Armageddon' }
+    else if prefix_id == 4 { 'Beast' }
+    else if prefix_id == 5 { 'Behemoth' }
+    else if prefix_id == 6 { 'Blight' }
+    else if prefix_id == 7 { 'Blood' }
+    else if prefix_id == 8 { 'Bramble' }
+    else if prefix_id == 9 { 'Brimstone' }
+    else if prefix_id == 10 { 'Brood' }
+    else if prefix_id == 11 { 'Carrion' }
+    else if prefix_id == 12 { 'Cataclysm' }
+    else if prefix_id == 13 { 'Chimeric' }
+    else if prefix_id == 14 { 'Corpse' }
+    else if prefix_id == 15 { 'Corruption' }
+    else if prefix_id == 16 { 'Damnation' }
+    else if prefix_id == 17 { 'Death' }
+    else if prefix_id == 18 { 'Demon' }
+    else if prefix_id == 19 { 'Dire' }
+    else if prefix_id == 20 { 'Dragon' }
+    else if prefix_id == 21 { 'Dread' }
+    else if prefix_id == 22 { 'Doom' }
+    else if prefix_id == 23 { 'Dusk' }
+    else if prefix_id == 24 { 'Eagle' }
+    else if prefix_id == 25 { 'Empyrean' }
+    else if prefix_id == 26 { 'Fate' }
+    else if prefix_id == 27 { 'Foe' }
+    else if prefix_id == 28 { 'Gale' }
+    else if prefix_id == 29 { 'Ghoul' }
+    else if prefix_id == 30 { 'Gloom' }
+    else if prefix_id == 31 { 'Glyph' }
+    else if prefix_id == 32 { 'Golem' }
+    else if prefix_id == 33 { 'Grim' }
+    else if prefix_id == 34 { 'Hate' }
+    else if prefix_id == 35 { 'Havoc' }
+    else if prefix_id == 36 { 'Honour' }
+    else if prefix_id == 37 { 'Horror' }
+    else if prefix_id == 38 { 'Hypnotic' }
+    else if prefix_id == 39 { 'Kraken' }
+    else if prefix_id == 40 { 'Loath' }
+    else if prefix_id == 41 { 'Maelstrom' }
+    else if prefix_id == 42 { 'Mind' }
+    else if prefix_id == 43 { 'Miracle' }
+    else if prefix_id == 44 { 'Morbid' }
+    else if prefix_id == 45 { 'Oblivion' }
+    else if prefix_id == 46 { 'Onslaught' }
+    else if prefix_id == 47 { 'Pain' }
+    else if prefix_id == 48 { 'Pandemonium' }
+    else if prefix_id == 49 { 'Phoenix' }
+    else if prefix_id == 50 { 'Plague' }
+    else if prefix_id == 51 { 'Rage' }
+    else if prefix_id == 52 { 'Rapture' }
+    else if prefix_id == 53 { 'Rune' }
+    else if prefix_id == 54 { 'Skull' }
+    else if prefix_id == 55 { 'Sol' }
+    else if prefix_id == 56 { 'Soul' }
+    else if prefix_id == 57 { 'Sorrow' }
+    else if prefix_id == 58 { 'Spirit' }
+    else if prefix_id == 59 { 'Storm' }
+    else if prefix_id == 60 { 'Tempest' }
+    else if prefix_id == 61 { 'Torment' }
+    else if prefix_id == 62 { 'Vengeance' }
+    else if prefix_id == 63 { 'Victory' }
+    else if prefix_id == 64 { 'Viper' }
+    else if prefix_id == 65 { 'Vortex' }
+    else if prefix_id == 66 { 'Woe' }
+    else if prefix_id == 67 { 'Wrath' }
+    else if prefix_id == 68 { 'Lights' }
+    else if prefix_id == 69 { 'Shimmering' }
+    else { '' }
+}
+
+// @notice Get suffix string from suffix ID (1-18)
+// @param suffix_id The suffix ID (1-18)
+// @return The suffix string
+pub fn get_suffix_string(suffix_id: u8) -> felt252 {
+    if suffix_id == 1 { 'Bane' }
+    else if suffix_id == 2 { 'Root' }
+    else if suffix_id == 3 { 'Bite' }
+    else if suffix_id == 4 { 'Song' }
+    else if suffix_id == 5 { 'Roar' }
+    else if suffix_id == 6 { 'Grasp' }
+    else if suffix_id == 7 { 'Instrument' }
+    else if suffix_id == 8 { 'Glow' }
+    else if suffix_id == 9 { 'Bender' }
+    else if suffix_id == 10 { 'Shadow' }
+    else if suffix_id == 11 { 'Whisper' }
+    else if suffix_id == 12 { 'Shout' }
+    else if suffix_id == 13 { 'Growl' }
+    else if suffix_id == 14 { 'Tear' }
+    else if suffix_id == 15 { 'Peak' }
+    else if suffix_id == 16 { 'Form' }
+    else if suffix_id == 17 { 'Sun' }
+    else if suffix_id == 18 { 'Moon' }
+    else { '' }
+}
+
+// @notice Generate prefix ID from item ID and XP
+// @param item_id The item ID
+// @param xp The item XP
+// @return The prefix ID (1-69)
+fn generate_prefix_id(item_id: u8, xp: u16) -> u8 {
+    let seed: u256 = item_id.into() * 1000 + xp.into();
+    let prefix_id = (seed % NAME_PREFIX_LENGTH.into()) + 1;
+    prefix_id.try_into().unwrap()
+}
+
+// @notice Generate suffix ID from item ID and XP
+// @param item_id The item ID
+// @param xp The item XP
+// @return The suffix ID (1-18)
+fn generate_suffix_id(item_id: u8, xp: u16) -> u8 {
+    let seed: u256 = item_id.into() * 2000 + xp.into();
+    let suffix_id = (seed % NAME_SUFFIX_LENGTH.into()) + 1;
+    suffix_id.try_into().unwrap()
 }
 
 // SVG Component System
@@ -737,7 +902,7 @@ fn create_svg(internals: ByteArray) -> ByteArray {
 // @param item The item to generate a string for
 // @param bag Whether the item is in the bag or not
 // @return The generated item string
-fn generate_item(item: Item, bag: bool) -> ByteArray {
+pub fn generate_item(item: Item, bag: bool) -> ByteArray {
     if item.id == 0 {
         if (bag) {
             return "Empty";
@@ -746,11 +911,33 @@ fn generate_item(item: Item, bag: bool) -> ByteArray {
         }
     }
 
-    // Simplified greatness calculation - using XP/10 as greatness
-    let greatness = item.xp / 10;
-    let item_name = format!("Item{}", item.id);
-
-    format!("G{} {} ", greatness, item_name)
+    // Calculate greatness using sqrt(item_xp)
+    let greatness = calculate_greatness(item.xp);
+    
+    // Get base item name from database
+    let base_name = ItemDatabaseImpl::get_item_name(item.id);
+    
+    // Build the full item name with prefix and suffix
+    let mut full_name = "";
+    
+    // Add prefix if greatness >= 19
+    if greatness >= PREFIXES_UNLOCK_GREATNESS {
+        let prefix_id = generate_prefix_id(item.id, item.xp);
+        let prefix = get_prefix_string(prefix_id);
+        full_name += format!("{} ", prefix);
+    }
+    
+    // Add base name
+    full_name += format!("{}", base_name);
+    
+    // Add suffix if greatness >= 15
+    if greatness >= SUFFIX_UNLOCK_GREATNESS {
+        let suffix_id = generate_suffix_id(item.id, item.xp);
+        let suffix = get_suffix_string(suffix_id);
+        full_name += format!(" {}", suffix);
+    }
+    
+    full_name
 }
 
 fn generate_logo() -> ByteArray {
