@@ -393,6 +393,150 @@ pub fn create_text_component(
     )
 }
 
+// @notice Create multi-line text component for long item names
+// @param text The text to render (may be split across lines)
+// @param position Base position for the text
+// @param fontsize Font size in pixels
+// @param theme SVG theme colors
+// @param text_anchor Text alignment (start, middle, end)
+// @param baseline Text baseline (text-top, middle, etc.)
+// @param max_chars_per_line Maximum characters per line before wrapping
+// @return SVG text elements for multi-line rendering
+pub fn create_multiline_text_component(
+    text: ByteArray,
+    position: SVGPosition,
+    fontsize: u32,
+    theme: @SVGTheme,
+    text_anchor: ByteArray,
+    baseline: ByteArray,
+    max_chars_per_line: u32,
+) -> ByteArray {
+    let lines = split_text_into_lines(text, max_chars_per_line);
+    let mut result = "";
+    let mut line_index = 0;
+    
+    loop {
+        if line_index >= lines.len() || line_index >= 2 {
+            break;
+        }
+        
+        let line_text = lines.at(line_index);
+        let line_y = position.y + (line_index * (fontsize + 2)); // Add 2px line spacing
+        let line_position = SVGPosition { x: position.x, y: line_y };
+        
+        result += create_text_component(
+            line_text.clone(), line_position, fontsize, theme, text_anchor.clone(), baseline.clone()
+        );
+        
+        line_index += 1;
+    };
+    
+    result
+}
+
+// @notice Split text into lines based on character limit
+// @param text The text to split
+// @param max_chars_per_line Maximum characters per line
+// @return Array of text lines
+fn split_text_into_lines(text: ByteArray, max_chars_per_line: u32) -> Array<ByteArray> {
+    let mut lines = ArrayTrait::new();
+    
+    // If text is short enough, return as single line
+    if text.len() <= max_chars_per_line {
+        lines.append(text);
+        return lines;
+    }
+    
+    // For longer text, split at word boundaries when possible
+    // Simple approach: look for spaces to break lines
+    let text_len = text.len();
+    let mut start = 0;
+    
+    loop {
+        if start >= text_len {
+            break;
+        }
+        
+        let remaining = text_len - start;
+        if remaining <= max_chars_per_line {
+            // Add remaining text as final line
+            let final_text = extract_substring(text.clone(), start, remaining);
+            lines.append(final_text);
+            break;
+        }
+        
+        // Find a good break point (look for space near the limit)
+        let mut break_point = max_chars_per_line;
+        let mut found_space = false;
+        
+        // Look backwards from max_chars_per_line to find a space
+        let mut search_pos = max_chars_per_line;
+        loop {
+            if search_pos <= max_chars_per_line / 2 {
+                break; // Don't look too far back
+            }
+            
+            if start + search_pos >= text_len {
+                search_pos -= 1;
+                continue;
+            }
+            
+            let char_option = text.at(start + search_pos);
+            match char_option {
+                Option::Some(char) => {
+                    if char == 32 { // ASCII space
+                        break_point = search_pos;
+                        found_space = true;
+                        break;
+                    }
+                },
+                Option::None => {},
+            }
+            search_pos -= 1;
+        };
+        
+        // Extract the line
+        let line_text = extract_substring(text.clone(), start, break_point);
+        lines.append(line_text);
+        
+        // Move start position, skip space if we broke on one
+        start += break_point;
+        if found_space && start < text_len {
+            start += 1; // Skip the space
+        }
+    };
+    
+    lines
+}
+
+// @notice Extract substring from ByteArray
+// @param text Source text
+// @param start Starting position
+// @param length Length to extract
+// @return Substring as ByteArray
+fn extract_substring(text: ByteArray, start: u32, length: u32) -> ByteArray {
+    let mut result = "";
+    let mut i = 0;
+    
+    loop {
+        if i >= length || start + i >= text.len() {
+            break;
+        }
+        
+        let char_option = text.at(start + i);
+        match char_option {
+            Option::Some(char) => {
+                result.append_byte(char);
+            },
+            Option::None => { break; },
+        }
+        
+        i += 1;
+    };
+    
+    result
+}
+
 pub fn create_stat_component(
     label: ByteArray, value: ByteArray, position: SVGPosition, theme: @SVGTheme,
 ) -> ByteArray {
@@ -453,9 +597,9 @@ pub fn create_inventory_slot_component(
     } else {
         ""
     };
-    let text_position = SVGPosition { x: position.x + 20, y: position.y + 55 };
-    let text_element = create_text_component(
-        item_name, text_position, 8, theme, "middle", "text-top",
+    let text_position = SVGPosition { x: position.x + 20, y: position.y + 45 };
+    let text_element = create_multiline_text_component(
+        item_name, text_position, 6, theme, "middle", "text-top", 10
     );
     let slot_number = create_text_component(
         format!("{}", slot_id),

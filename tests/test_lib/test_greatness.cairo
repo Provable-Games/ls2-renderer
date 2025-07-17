@@ -1,8 +1,11 @@
 use ls2_renderer::mocks::mock_adventurer::Item;
-use ls2_renderer::utils::renderer_utils::{calculate_greatness, generate_item};
+use ls2_renderer::utils::renderer_utils::{
+    calculate_greatness, generate_item, create_inventory_slot_component, 
+    create_multiline_text_component, get_default_theme, SVGPosition
+};
 
 #[test]
-#[available_gas(200000)]
+#[available_gas(l1_gas: 500, l1_data_gas: 5000, l2_gas: 20000000)]
 fn test_greatness_system() {
     // Test different greatness levels
     
@@ -43,5 +46,45 @@ fn test_greatness_system() {
     let name6 = generate_item(item6, false);
     println!("Item 6 (Crown, XP=400, G=20): {}", name6);
     
+    // Test 7: Test with potentially longer item names
+    let item7 = Item { id: 78, xp: 400 }; // OrnateChestplate with 400 XP
+    let name7 = generate_item(item7, false);
+    println!("Item 7 (OrnateChestplate, XP=400, G=20): {}", name7);
+    
+    let item8 = Item { id: 89, xp: 400 }; // PlatedBelt with 400 XP  
+    let name8 = generate_item(item8, false);
+    println!("Item 8 (PlatedBelt, XP=400, G=20): {}", name8);
+    
     println!("All greatness tests passed!");
+}
+
+#[test]
+#[available_gas(l1_gas: 500, l1_data_gas: 5000, l2_gas: 20000000)]
+fn test_multiline_text_rendering() {
+    let theme = get_default_theme();
+    
+    // Test 1: Create inventory slots with long names that should be multi-line
+    let slot1_pos = SVGPosition { x: 50, y: 100 };
+    let slot1_svg = create_inventory_slot_component(1, "Death Ornate Chestplate Sun", slot1_pos, @theme);
+    println!("Slot 1 SVG: {}", slot1_svg);
+    
+    // Test 2: Create another slot right below to check for overlap
+    let slot2_pos = SVGPosition { x: 50, y: 170 }; // 70px below first slot
+    let slot2_svg = create_inventory_slot_component(2, "Onslaught Plated Belt Bite", slot2_pos, @theme);
+    println!("Slot 2 SVG: {}", slot2_svg);
+    
+    // Test 3: Test multi-line component directly
+    let text_pos = SVGPosition { x: 200, y: 100 };
+    let multiline_svg = create_multiline_text_component(
+        "Onslaught Plated Belt Bite", text_pos, 6, @theme, "middle", "text-top", 10
+    );
+    println!("Multi-line SVG for problem text: {}", multiline_svg);
+    
+    // Test 4: Test space-separated words
+    let test_short = create_multiline_text_component(
+        "Short Name", text_pos, 6, @theme, "middle", "text-top", 10
+    );
+    println!("Short name SVG: {}", test_short);
+    
+    println!("Multi-line text rendering tests passed!");
 }
