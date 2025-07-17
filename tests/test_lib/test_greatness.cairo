@@ -73,18 +73,24 @@ fn test_multiline_text_rendering() {
     let slot2_svg = create_inventory_slot_component(2, "Onslaught Plated Belt Bite", slot2_pos, @theme);
     println!("Slot 2 SVG: {}", slot2_svg);
     
-    // Test 3: Test multi-line component directly
+    // Test 3: Test word-per-line rendering
     let text_pos = SVGPosition { x: 200, y: 100 };
     let multiline_svg = create_multiline_text_component(
-        "Onslaught Plated Belt Bite", text_pos, 6, @theme, "middle", "text-top", 10
+        "Onslaught Plated Belt Bite", text_pos, 5, @theme, "middle", "text-top", 20
     );
-    println!("Multi-line SVG for problem text: {}", multiline_svg);
+    println!("Word-per-line SVG for problem text: {}", multiline_svg);
     
-    // Test 4: Test space-separated words
+    // Test 4: Test short text
     let test_short = create_multiline_text_component(
-        "Short Name", text_pos, 6, @theme, "middle", "text-top", 10
+        "Short Name", text_pos, 5, @theme, "middle", "text-top", 20
     );
-    println!("Short name SVG: {}", test_short);
+    println!("Short name word-per-line SVG: {}", test_short);
+    
+    // Test 5: Test single word
+    let test_single = create_multiline_text_component(
+        "Katana", text_pos, 5, @theme, "middle", "text-top", 20
+    );
+    println!("Single word SVG: {}", test_single);
     
     println!("Multi-line text rendering tests passed!");
 }
